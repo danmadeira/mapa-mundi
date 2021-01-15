@@ -4,7 +4,9 @@ Um mapa da superfície total da Terra, projetado a partir dos dados fornecidos p
 
 O Natural Earth fornece arquivos, no formato GeoJSON, com as coordenadas geográficas de todo o perímetro de cada país. Este script em PHP, converte estas coordenadas geográficas em pontos para a construção dos polígonos em SVG. A base do SimpleMaps foi importada para o banco de dados MySQL, para consulta pelo script, e assim, pontuar as cidades capitais.
 
-Este script em PHP foi desenvolvido de uma forma simples para facilitar o entendimento dos algoritmos e aceita variáveis externas, pelo método GET, para definir a largura e a altura do mapa, como também o algoritmo de projeção (equidistante, sinusoidal, Kavrayskiy VII e Robinson). Ex.: mapamundi.php?largura=1000&altura=500&projecao=r
+Este script em PHP foi desenvolvido de uma forma simples para facilitar o entendimento dos algoritmos e aceita variáveis externas, pelo método GET, para definir a largura e a altura do mapa, como também o algoritmo de projeção (equidistante, sinusoidal, Kavrayskiy VII, Natural Earth, Patterson e Robinson).
+
+Ex.: mapamundi.php?largura=1000&altura=500&projecao=r
 
 ### O mapa
 
@@ -36,8 +38,12 @@ Este script em PHP foi desenvolvido de uma forma simples para facilitar o entend
 
 - NIMA *Technical Report 8350.2, Department of Defense World Geodetic System 1984: Its Definition and Relationships with Local Geodetic Systems, Third Edition, Amendment 1*. Geodesy and Geophysics Department, National Imagery and Mapping Agency. January 3, 2000.
 
+- PATTERSON, T.; ŠAVRIČ, B.; JENNY, B. *Introducing the Patterson Cylindrical Projection*. Cartographic Perspectives, Number 78, pp. 77-81, December 2014. Disponível em: <https://cartographicperspectives.org/index.php/journal/article/view/cp78-patterson-et-al/1361>
+
+- ŠAVRIČ, B.; JENNY, B.; PATTERSON, T.; PETROVIČ, D.; HURNI, L. *A Polynomial Equation for the Natural Earth Projection*. Cartography and Geographic Information Science, Vol. 38, No. 4, pp. 363-372, 2011.
+
 - ŠAVRIČ, B.; PATTERSON, T.; JENNY, B. *The Natural Earth II world map projection*. International Journal of Cartography, 
-Vol. 1, No. 2, pp. 123–133, 2015.
+Volume 1, Issue 2, pp. 123–133, 2015.
 
 - SimpleMaps.com *How to import a CSV file into MySQL*. Tutorials and Articles. Disponível em: <https://simplemaps.com/resources/import-csv-mysql>
 

@@ -5,27 +5,16 @@ ini_set('display_errors', 1);
 
 $largura = filter_input(INPUT_GET, 'largura', FILTER_VALIDATE_INT, array('options' => array('default' => 1200, 'min_range' => 720, 'max_range' => 3840)));
 $altura = filter_input(INPUT_GET, 'altura', FILTER_VALIDATE_INT, array('options' => array('default' => 566, 'min_range' => 480, 'max_range' => 2160)));
-$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'r', 'regexp' => '/[ekrs]/')));
+$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'r', 'regexp' => '/[eknprs]/')));
 
-$dsn = 'mysql:host=localhost;dbname=world;charset=utf8';
-$user = 'usuario';
-$pass = 'senha';
-$pdo = new PDO($dsn, $user, $pass);
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+echo montarPagina($largura, $altura, $projecao);
 
-$query = "SELECT city, lat, lng, country, id FROM worldcities
-          WHERE lat IS NOT NULL AND lng IS NOT NULL AND capital = 'primary'
-          ORDER BY population";
-$result = $pdo->query($query);
-
-echo montarPagina($result, $largura, $altura, $projecao);
-
-function montarPagina(object $result, int $largura, int $altura, string $projecao): string
+function montarPagina(int $largura, int $altura, string $projecao): string
 {
     $svg = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="' . $largura.'" height="' . $altura . '">' . PHP_EOL;
     $svg .= '<rect x="0" y="0" width="' . $largura . '" height="' . $altura . '" fill="none" stroke="rgb(150,150,150)" stroke-width="1" />' . PHP_EOL;
     $svg .= exibirMundo($largura, $altura, $projecao);
-    $svg .= exibirCidades($result, $largura, $altura, $projecao);
+    $svg .= exibirCidades($largura, $altura, $projecao);
     $svg .= exibirGrade($largura, $altura, $projecao);
     $svg .= '</svg>' . PHP_EOL;
 
@@ -36,11 +25,23 @@ function montarPagina(object $result, int $largura, int $altura, string $projeca
     return $html;
 }
 
-function exibirCidades(object $result, int $largura, int $altura, string $projecao): string
+function exibirCidades(int $largura, int $altura, string $projecao): string
 {
-    $svg = '<g fill="rgb(33,42,116)" stroke-width="0" onmouseover="evt.target.setAttribute(\'fill\', \'blue\');" onmouseout="evt.target.setAttribute(\'fill\',\'red\');">' . PHP_EOL;
+    $svg = '';
+    
+    $dsn = 'mysql:host=localhost;dbname=world;charset=utf8';
+    $user = 'usuario';
+    $pass = 'senha';
+    $pdo = new PDO($dsn, $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    $query = "SELECT city, lat, lng, country, id FROM worldcities
+              WHERE lat IS NOT NULL AND lng IS NOT NULL AND capital = 'primary'
+              ORDER BY population";
+    $result = $pdo->query($query);
     
     if ($result->rowCount() >= 1) {
+        $svg .= '<g fill="rgb(33,42,116)" stroke-width="0" onmouseover="evt.target.setAttribute(\'fill\', \'blue\');" onmouseout="evt.target.setAttribute(\'fill\',\'red\');">' . PHP_EOL;
         while ($cidade = $result->fetch(PDO::FETCH_ASSOC)) {
             $latitude = $cidade['lat'];
             $longitude = $cidade['lng'];
@@ -48,42 +49,170 @@ function exibirCidades(object $result, int $largura, int $altura, string $projec
             $titulo = $cidade['city'] . ' (' . $cidade['country'] . ')';
             $svg .= '<circle id="'.$cidade['id'].'" cx="' . $ponto['x'] . '" cy="' . $ponto['y'] . '" r="3"><title>' . $titulo . '</title></circle>' . PHP_EOL;
         }
+        $svg .= '</g>' . PHP_EOL;
     }
-    $svg .= '</g>' . PHP_EOL;
+    
     return $svg;
 }
 
 function converterGeoPixel(float $latitude, float $longitude, int $largura, int $altura, string $projecao): array
 {
-    if ($projecao == 'e') { // plate carrée // equirectangular projection
-        $radiano = false;
-    } elseif ($projecao == 'k') { // Kavrayskiy VII projection
-        $radiano = false;
-    } elseif ($projecao == 'r') { // Robinson projection
-        $radiano = true;
-    } elseif ($projecao == 's') { // sinusoidal projection
-        $radiano = false;
-    }
     $centro = coordenarCentro($largura, $altura);
-    $modulo = calcularModulo($largura, $altura, $radiano);
     
-    if ($projecao == 'r') {
-        $latitude = deg2rad($latitude);
-        $longitude = deg2rad($longitude);
-        if ($latitude >= 0) {
-            $s = -1;
-        } else {
-            $s = 1;
-        }
-        $x = floor($centro['x'] + ((2.6666 - 0.367 * pow($latitude, 2) - 0.150 * pow($latitude, 4) + 0.0379 * pow($latitude, 6)) * $longitude / pi()) * $modulo);
-        $y = floor($centro['y'] - (0.96047 * $latitude - 0.00857 * $s * pow(abs($latitude), 6.41)) * $modulo);
-    } else {
-        $fatorpolo = calcularFatorPolo($latitude, $projecao);
-        $x = floor($centro['x'] + ($longitude * $modulo * $fatorpolo));
-        $y = floor($centro['y'] - ($latitude * $modulo));
+    switch ($projecao) {
+        case 'e': // equirectangular projection // plate carrée
+            if ($largura / $altura < 2) {
+                $modulo = $largura / 360;
+            } else {
+                $modulo = $altura / 180;
+            }
+            $x = floor($centro['x'] + ($longitude * $modulo));
+            $y = floor($centro['y'] - ($latitude * $modulo));
+            break;
+        case 'k': // Kavrayskiy VII projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularKavrayskiyVIIX(0, 180) * 2);
+            } else {
+                $modulo = $altura / (calcularKavrayskiyVIIY(90) * 2);
+            }
+            $x = floor($centro['x'] + (calcularKavrayskiyVIIX($latitude, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularKavrayskiyVIIY($latitude) * $modulo));
+            break;
+        case 'n': // Natural Earth projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularNaturalEarthX(0, 180) * 2);
+            } else {
+                $modulo = $altura / (calcularNaturalEarthY(90) * 2);
+            }
+            $x = floor($centro['x'] + (calcularNaturalEarthX($latitude, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularNaturalEarthY($latitude) * $modulo));
+            break;
+        /*
+        case 'N': // Natural Earth II projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularNaturalEarthIIX(0, 180) * 2);
+            } else {
+                $modulo = $altura / (calcularNaturalEarthIIY(90) * 2);
+            }
+            $x = floor($centro['x'] + (calcularNaturalEarthIIX($latitude, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularNaturalEarthIIY($longitude) * $modulo));
+            break;
+         */
+        case 'p': // Patterson projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularPattersonX(180) * 2);
+            } else {
+                $modulo = $altura / (calcularPattersonY(90) * 2);
+            }
+            $x = floor($centro['x'] + (calcularPattersonX($longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularPattersonY($latitude) * $modulo));
+            break;
+        case 'r': // Robinson projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularRobinsonX(0, 180) * 2);
+            } else {
+                $modulo = $altura / (calcularRobinsonY(90) * 2);
+            }
+            $x = floor($centro['x'] + (calcularRobinsonX($latitude, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularRobinsonY($latitude) * $modulo));
+            break;
+        case 's': // sinusoidal projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularSinusoidalX(0, 180) * 2);
+            } else {
+                $modulo = $altura / (calcularSinusoidalY(90) * 2);
+            }
+            $x = floor($centro['x'] + (calcularSinusoidalX($latitude, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularSinusoidalY($latitude) * $modulo));
+            break;
     }
-    
+    /*
+    if ($largura / $altura < 2) { $modulo = $largura / 360; }
+    else { $modulo = $altura / 180; }
+    $x = $longitude * abs(((abs($latitude) - abs($latitude) * 50 / 100) / 90) - 1);
+    $y = $latitude;
+    $x = floor($centro['x'] + ($x * $modulo));
+    $y = floor($centro['y'] - ($y * $modulo));
+    */
     return array('x' => $x, 'y' => $y);
+}
+
+function calcularKavrayskiyVIIX(float $latitude, float $longitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    $longitude = $longitude * (3.14159265359 / 180);
+    return (3 * $longitude / 2) * sqrt(1 / 3 - pow($latitude / 3.14159265359, 2));
+}
+
+function calcularKavrayskiyVIIY(float $latitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    return $latitude;
+}
+
+function calcularNaturalEarthX(float $latitude, float $longitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    $longitude = $longitude * (3.14159265359 / 180);
+    return ($longitude * (0.870700 - 0.131979 * pow($latitude, 2) - 0.013791 * pow($latitude, 4) + 0.003971 * pow($latitude, 10) - 0.001529 * pow($latitude, 12)));
+}
+
+function calcularNaturalEarthY(float $latitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    return (1.007226 * $latitude + 0.015085 * pow($latitude, 3) - 0.044475 * pow($latitude, 7) + 0.028874 * pow($latitude, 9) - 0.005916 * pow($latitude, 11));
+}
+/*
+function calcularNaturalEarthIIX(float $latitude, float $longitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    $longitude = $longitude * (3.14159265359 / 180);
+    return ($latitude * (0.84719 - 0.13063 * pow($longitude, 2) - 0.04515 * pow($longitude, 12) + 0.05494 * pow($longitude, 14) + 0.02326 * pow($longitude, 16) + 0.00331 * pow($longitude, 18)));
+}
+
+function calcularNaturalEarthIIY(float $longitude): float
+{
+    $longitude = $longitude * (3.14159265359 / 180);
+    return (1.01183 * $longitude - 0.02625 * pow($longitude, 9) + 0.01926 * pow($longitude, 11) - 0.00396 * pow($longitude, 13));
+}
+*/
+function calcularPattersonX(float $longitude): float
+{
+    $longitude = $longitude * (3.14159265359 / 180);
+    return $longitude;
+}
+
+function calcularPattersonY(float $latitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    $quadrado = $latitude * $latitude;
+    //$y = (1.0148 * $latitude + 0.23185 * pow($latitude, 5) - 0.14499 * pow($latitude, 7) + 0.02406 * pow($latitude, 9));
+    return ($latitude * (1.0148 + $quadrado * $quadrado * (0.23185 + $quadrado * (-0.14499 + $quadrado * 0.02406))));
+}
+
+function calcularRobinsonX(float $latitude, float $longitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    $longitude = $longitude * (3.14159265359 / 180);
+    return ((2.6666 - 0.367 * pow($latitude, 2) - 0.150 * pow($latitude, 4) + 0.0379 * pow($latitude, 6)) * $longitude / 3.14159265359);
+}
+
+function calcularRobinsonY(float $latitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    if ($latitude >= 0) { $s = -1; } else { $s = 1; }
+    return (0.96047 * $latitude - 0.00857 * $s * pow(abs($latitude), 6.41));
+}
+
+function calcularSinusoidalX(float $latitude, float $longitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    return $longitude * cos($latitude);
+}
+
+function calcularSinusoidalY(float $latitude): float
+{
+    return $latitude;
 }
 
 function coordenarCentro(int $largura, int $altura): array
@@ -91,35 +220,6 @@ function coordenarCentro(int $largura, int $altura): array
     $centro = array('x' => $largura / 2,
                     'y' => $altura / 2);
     return $centro;
-}
-
-function calcularModulo(int $largura, int $altura, bool $radiano = false): float
-{
-    $paralelo = 360;
-    $meridiano = 180;
-    if ($radiano) {
-        $paralelo = deg2rad($paralelo);
-        $meridiano = deg2rad($meridiano);
-    }
-    if ($largura / $altura < 2) {
-        $modulo = $largura / $paralelo;
-    } else {
-        $modulo = $altura / $meridiano;
-    }
-    return $modulo;
-}
-
-function calcularFatorPolo(float $latitude, string $projecao): float
-{
-    if ($projecao == 'e') {
-        return 1; // plate carrée // equirectangular projection
-    } elseif ($projecao == 'k') {
-        return abs(3/2 * sqrt(1/3 - pow(deg2rad($latitude)/pi(), 2))); // Kavrayskiy VII projection
-    } elseif ($projecao == 's') {
-        return abs(cos(deg2rad($latitude))); // sinusoidal projection
-    }
-    ////return abs((abs($latitude) / 90) - 1); // 
-    ////return abs(((abs($latitude) - abs($latitude) * 50 / 100) / 90) - 1); // redução de 50%
 }
 
 function exibirMundo(int $largura, int $altura, string $projecao): string
