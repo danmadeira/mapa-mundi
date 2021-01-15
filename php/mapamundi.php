@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 
 $largura = filter_input(INPUT_GET, 'largura', FILTER_VALIDATE_INT, array('options' => array('default' => 1200, 'min_range' => 720, 'max_range' => 3840)));
 $altura = filter_input(INPUT_GET, 'altura', FILTER_VALIDATE_INT, array('options' => array('default' => 566, 'min_range' => 480, 'max_range' => 2160)));
-$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'r', 'regexp' => '/[eknprs]/')));
+$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/[eknNprs]/')));
 
 echo montarPagina($largura, $altura, $projecao);
 
@@ -69,6 +69,7 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $x = floor($centro['x'] + ($longitude * $modulo));
             $y = floor($centro['y'] - ($latitude * $modulo));
             break;
+            
         case 'k': // Kavrayskiy VII projection
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularKavrayskiyVIIX(0, 180) * 2);
@@ -78,6 +79,7 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $x = floor($centro['x'] + (calcularKavrayskiyVIIX($latitude, $longitude) * $modulo));
             $y = floor($centro['y'] - (calcularKavrayskiyVIIY($latitude) * $modulo));
             break;
+            
         case 'n': // Natural Earth projection
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularNaturalEarthX(0, 180) * 2);
@@ -87,17 +89,17 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $x = floor($centro['x'] + (calcularNaturalEarthX($latitude, $longitude) * $modulo));
             $y = floor($centro['y'] - (calcularNaturalEarthY($latitude) * $modulo));
             break;
-        /*
-        case 'N': // Natural Earth II projection
+            
+        case 'N': // Natural Earth II projection (fix needed)
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularNaturalEarthIIX(0, 180) * 2);
             } else {
                 $modulo = $altura / (calcularNaturalEarthIIY(90) * 2);
             }
             $x = floor($centro['x'] + (calcularNaturalEarthIIX($latitude, $longitude) * $modulo));
-            $y = floor($centro['y'] - (calcularNaturalEarthIIY($longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularNaturalEarthIIY($latitude) * $modulo));
             break;
-         */
+            
         case 'p': // Patterson projection
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularPattersonX(180) * 2);
@@ -107,6 +109,7 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $x = floor($centro['x'] + (calcularPattersonX($longitude) * $modulo));
             $y = floor($centro['y'] - (calcularPattersonY($latitude) * $modulo));
             break;
+            
         case 'r': // Robinson projection
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularRobinsonX(0, 180) * 2);
@@ -116,6 +119,7 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $x = floor($centro['x'] + (calcularRobinsonX($latitude, $longitude) * $modulo));
             $y = floor($centro['y'] - (calcularRobinsonY($latitude) * $modulo));
             break;
+            
         case 's': // sinusoidal projection
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularSinusoidalX(0, 180) * 2);
@@ -129,11 +133,13 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
     /*
     if ($largura / $altura < 2) { $modulo = $largura / 360; }
     else { $modulo = $altura / 180; }
-    $x = $longitude * abs(((abs($latitude) - abs($latitude) * 50 / 100) / 90) - 1);
+    $x = $longitude * abs((abs($latitude) / 90) - 1); // losango
+    $x = $longitude * abs(((abs($latitude) - abs($latitude) * 50 / 100) / 90) - 1); // trapézio
     $y = $latitude;
     $x = floor($centro['x'] + ($x * $modulo));
     $y = floor($centro['y'] - ($y * $modulo));
     */
+    
     return array('x' => $x, 'y' => $y);
 }
 
@@ -162,20 +168,27 @@ function calcularNaturalEarthY(float $latitude): float
     $latitude = $latitude * (3.14159265359 / 180);
     return (1.007226 * $latitude + 0.015085 * pow($latitude, 3) - 0.044475 * pow($latitude, 7) + 0.028874 * pow($latitude, 9) - 0.005916 * pow($latitude, 11));
 }
-/*
+
 function calcularNaturalEarthIIX(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
     $longitude = $longitude * (3.14159265359 / 180);
-    return ($latitude * (0.84719 - 0.13063 * pow($longitude, 2) - 0.04515 * pow($longitude, 12) + 0.05494 * pow($longitude, 14) + 0.02326 * pow($longitude, 16) + 0.00331 * pow($longitude, 18)));
+    //return ($longitude * (0.84719 - 0.13063 * pow($latitude, 2) - 0.04515 * pow($latitude, 12) + 0.05494 * pow($latitude, 14) + 0.02326 * pow($latitude, 16) + 0.00331 * pow($latitude, 18)));
+    $latitude2 = $latitude * $latitude;
+    $latitude4 = $latitude2 * $latitude2;
+    $latitude6 = $latitude4 * $latitude2;
+    return ($longitude * (0.84719 - 0.13063 * $latitude2 + $latitude6 * $latitude6 * (-0.04515 + 0.05494 * $latitude2 + 0.02326 * $latitude4 + 0.00331 * $latitude6)));
 }
 
-function calcularNaturalEarthIIY(float $longitude): float
+function calcularNaturalEarthIIY(float $latitude): float
 {
-    $longitude = $longitude * (3.14159265359 / 180);
-    return (1.01183 * $longitude - 0.02625 * pow($longitude, 9) + 0.01926 * pow($longitude, 11) - 0.00396 * pow($longitude, 13));
+    $latitude = $latitude * (3.14159265359 / 180);
+    //return (1.01183 * $latitude - 0.02625 * pow($latitude, 9) + 0.01926 * pow($latitude, 11) - 0.00396 * pow($latitude, 13));
+    $latitude2 = $latitude * $latitude;
+    $latitude4 = $latitude2 * $latitude2;
+    return ($latitude * (1.01183 + $latitude4 * $latitude4 * (-0.02625 + 0.01926 * $latitude2 - 0.00396 * $latitude4)));
 }
-*/
+
 function calcularPattersonX(float $longitude): float
 {
     $longitude = $longitude * (3.14159265359 / 180);
@@ -200,7 +213,7 @@ function calcularRobinsonX(float $latitude, float $longitude): float
 function calcularRobinsonY(float $latitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
-    if ($latitude >= 0) { $s = -1; } else { $s = 1; }
+    if ($latitude >= 0) { $s = 1; } else { $s = -1; }
     return (0.96047 * $latitude - 0.00857 * $s * pow(abs($latitude), 6.41));
 }
 
