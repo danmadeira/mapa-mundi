@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 
 $largura = filter_input(INPUT_GET, 'largura', FILTER_VALIDATE_INT, array('options' => array('default' => 1200, 'min_range' => 720, 'max_range' => 3840)));
 $altura = filter_input(INPUT_GET, 'altura', FILTER_VALIDATE_INT, array('options' => array('default' => 566, 'min_range' => 480, 'max_range' => 2160)));
-$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/[eknNprs]/')));
+$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/[ekmnNprs]/')));
 
 echo montarPagina($largura, $altura, $projecao);
 
@@ -78,6 +78,16 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             }
             $x = floor($centro['x'] + (calcularKavrayskiyVIIX($latitude, $longitude) * $modulo));
             $y = floor($centro['y'] - (calcularKavrayskiyVIIY($latitude) * $modulo));
+            break;
+            
+        case 'm': // Mercator projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularMercatorX(180) * 2 * 1.4844222297453322);
+            } else {
+                $modulo = $altura / (calcularMercatorY(90) * 2);
+            }
+            $x = floor($centro['x'] + (calcularMercatorX($longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularMercatorY($latitude) * $modulo));
             break;
             
         case 'n': // Natural Earth projection
@@ -154,6 +164,27 @@ function calcularKavrayskiyVIIY(float $latitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
     return $latitude;
+}
+
+function calcularMercatorX(float $longitude): float
+{
+    $longitude = $longitude * (3.14159265359 / 180);
+    return $longitude;
+}
+
+function calcularMercatorY(float $latitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    
+    if ($latitude > 1.4844222297453322) {
+        return 3.14159265359;
+    } elseif ($latitude < -1.4844222297453322) {
+        return -3.14159265359;
+    } else {
+        return (log(tan(3.14159265359/4 + $latitude/2)));
+    }
+    //return (log(1/cos($latitude) + tan($latitude)));
+    //return (log(tan(3.14159265359/4 + $latitude/2)));
 }
 
 function calcularNaturalEarthX(float $latitude, float $longitude): float
