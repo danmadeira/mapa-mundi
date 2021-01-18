@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 
 $largura = filter_input(INPUT_GET, 'largura', FILTER_VALIDATE_INT, array('options' => array('default' => 1200, 'min_range' => 720, 'max_range' => 3840)));
 $altura = filter_input(INPUT_GET, 'altura', FILTER_VALIDATE_INT, array('options' => array('default' => 566, 'min_range' => 480, 'max_range' => 2160)));
-$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/[ekmnNprsw]/')));
+$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/[ekmMnNprswW]/')));
 
 echo montarPagina($largura, $altura, $projecao);
 
@@ -90,6 +90,16 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $y = floor($centro['y'] - (calcularMercatorY($latitude) * $modulo));
             break;
             
+        case 'M': // Miller cylindrical projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularMillerX(180) * 2);
+            } else {
+                $modulo = $altura / (calcularMillerY(90) * 2);
+            }
+            $x = floor($centro['x'] + (calcularMillerX($longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularMillerY($latitude) * $modulo));
+            break;
+            
         case 'n': // Natural Earth projection
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularNaturalEarthX(0, 180) * 2);
@@ -149,6 +159,16 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $x = floor($centro['x'] + (calcularWagnerVIX($latitude, $longitude) * $modulo));
             $y = floor($centro['y'] - (calcularWagnerVIY($latitude) * $modulo));
             break;
+            
+        case 'W': // Winkel tripel projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularWinkelIIIX(0, 180) * 2);
+            } else {
+                $modulo = $altura / (calcularWinkelIIIY(90, 0) * 2);
+            }
+            $x = floor($centro['x'] + (calcularWinkelIIIX($latitude, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularWinkelIIIY($latitude, $longitude) * $modulo));
+            break;
     }
     /*
     if ($largura / $altura < 2) { $modulo = $largura / 360; }
@@ -195,6 +215,18 @@ function calcularMercatorY(float $latitude): float
     }
     //return (log(1/cos($latitude) + tan($latitude)));
     //return (log(tan(3.14159265359/4 + $latitude/2)));
+}
+
+function calcularMillerX(float $longitude): float
+{
+    $longitude = $longitude * (3.14159265359 / 180);
+    return $longitude;
+}
+
+function calcularMillerY(float $latitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    return ((5/4) * log(tan(3.14159265359/4 + ((2 * $latitude)/5))));
 }
 
 function calcularNaturalEarthX(float $latitude, float $longitude): float
@@ -282,6 +314,24 @@ function calcularWagnerVIY(float $latitude): float
     return $latitude;
 }
 
+function calcularWinkelIIIX(float $latitude, float $longitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    $longitude = $longitude * (3.14159265359 / 180);
+    $alpha = acos(cos($latitude) * cos($longitude / 2));
+    $sinc = sin($alpha) / $alpha;
+    return ((1 / 2) * ($longitude * cos(acos(2 / 3.14159265359)) + ((2 * cos($latitude) * sin($longitude / 2)) / ($sinc))));
+}
+
+function calcularWinkelIIIY(float $latitude, float $longitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    $longitude = $longitude * (3.14159265359 / 180);
+    $alpha = acos(cos($latitude) * cos($longitude / 2));
+    $sinc = sin($alpha) / $alpha;
+    return ((1 / 2) * ($latitude + (sin($latitude) / ($sinc))));
+}
+
 function coordenarCentro(int $largura, int $altura): array
 {
     $centro = array('x' => $largura / 2,
@@ -365,14 +415,35 @@ function exibirParalelos(int $largura, int $altura, string $projecao): string
     $svg = '';
     $paralelos = array(15, 30, 45, 60, 75, 90);
     foreach ($paralelos as $latitude) {
-        $nw = converterGeoPixel($latitude, 180, $largura, $altura, $projecao);
-        $ne = converterGeoPixel($latitude, -180, $largura, $altura, $projecao);
-        $svg .= '<line x1="' . $ne['x'] . '" y1="' . $ne['y'] . '" x2="' . $nw['x'] . '" y2="' . $nw['y'] . '" />' . PHP_EOL;
-        $sw = converterGeoPixel(-$latitude, 180, $largura, $altura, $projecao);
-        $se = converterGeoPixel(-$latitude, -180, $largura, $altura, $projecao);
-        $svg .= '<line x1="' . $se['x'] . '" y1="' . $se['y'] . '" x2="' . $sw['x'] . '" y2="' . $sw['y'] . '" />' . PHP_EOL;
+        if ($projecao == 'W') {
+            $svg .= calcularCaminhoParalelo($latitude, $largura, $altura, $projecao);
+            $svg .= calcularCaminhoParalelo(-$latitude, $largura, $altura, $projecao);
+        } else {
+            $svg .= calcularLinhaParalelo($latitude, $largura, $altura, $projecao);
+            $svg .= calcularLinhaParalelo(-$latitude, $largura, $altura, $projecao);
+        }
     }
     return $svg;
+}
+
+function calcularCaminhoParalelo(float $latitude, int $largura, int $altura, string $projecao): string
+{
+    $svg = '';
+    $ponto = converterGeoPixel($latitude, -180, $largura, $altura, $projecao);
+    $svg .= '<path d="M' . $ponto['x'] . ',' . $ponto['y'];
+    for ($longitude = -179; $longitude <= 180; $longitude++) {
+        $ponto = converterGeoPixel($latitude, $longitude, $largura, $altura, $projecao);
+        $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
+    }
+    $svg .= '" />' . PHP_EOL;
+    return $svg;
+}
+
+function calcularLinhaParalelo(float $latitude, int $largura, int $altura, string $projecao): string
+{
+    $ocidente = converterGeoPixel($latitude, -180, $largura, $altura, $projecao);
+    $oriente = converterGeoPixel($latitude, 180, $largura, $altura, $projecao);
+    return '<line x1="' . $ocidente['x'] . '" y1="' . $ocidente['y'] . '" x2="' . $oriente['x'] . '" y2="' . $oriente['y'] . '" />' . PHP_EOL;
 }
 
 function exibirMeridianos(int $largura, int $altura, string $projecao): string
@@ -380,50 +451,73 @@ function exibirMeridianos(int $largura, int $altura, string $projecao): string
     $svg = '';
     $meridianos = array(15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180);
     foreach ($meridianos as $longitude) {
-        $ponto = converterGeoPixel(-90, $longitude, $largura, $altura, $projecao);
-        $svg .= '<path d="M' . $ponto['x'] . ',' . $ponto['y'];
-        for ($latitude = -89; $latitude <= 90; $latitude++) {
-            $ponto = converterGeoPixel($latitude, $longitude, $largura, $altura, $projecao);
-            $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
-        }
-        $svg .= '" />' . PHP_EOL;
-        $ponto = converterGeoPixel(-90, -$longitude, $largura, $altura, $projecao);
-        $svg .= '<path d="M' . $ponto['x'] . ',' . $ponto['y'];
-        for ($latitude = -89; $latitude <= 90; $latitude++) {
-            $ponto = converterGeoPixel($latitude, -$longitude, $largura, $altura, $projecao);
-            $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
-        }
-        $svg .= '" />' . PHP_EOL;
+        $svg .= calcularCaminhoMeridiano(-$longitude, $largura, $altura, $projecao);
+        $svg .= calcularCaminhoMeridiano($longitude, $largura, $altura, $projecao);
     }
+    return $svg;
+}
+
+function calcularCaminhoMeridiano(float $longitude, int $largura, int $altura, string $projecao): string
+{
+    $svg = '';
+    $ponto = converterGeoPixel(-90, $longitude, $largura, $altura, $projecao);
+    $svg .= '<path d="M' . $ponto['x'] . ',' . $ponto['y'];
+    for ($latitude = -89; $latitude <= 90; $latitude++) {
+        $ponto = converterGeoPixel($latitude, $longitude, $largura, $altura, $projecao);
+        $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
+    }
+    $svg .= '" />' . PHP_EOL;
     return $svg;
 }
 
 function exibirCirculos(int $largura, int $altura, string $projecao): string
 {
     $svg = '';
+    $cancer = 23.43656;
+    $capricornio = -23.43656;
+    $artico = 66.5622;
+    $antartico = -66.5622;
     
-    $tw = converterGeoPixel(23.43656, 180, $largura, $altura, $projecao);
-    $te = converterGeoPixel(23.43656, -180, $largura, $altura, $projecao);
-    $svg .= '<line x1="' . $te['x'] . '" y1="' . $te['y'] . '" x2="' . $tw['x'] . '" y2="' . $tw['y'] . '" stroke-dasharray="10,10" />' . PHP_EOL;
-    $tw = converterGeoPixel(-23.43656, 180, $largura, $altura, $projecao);
-    $te = converterGeoPixel(-23.43656, -180, $largura, $altura, $projecao);
-    $svg .= '<line x1="' . $te['x'] . '" y1="' . $te['y'] . '" x2="' . $tw['x'] . '" y2="' . $tw['y'] . '" stroke-dasharray="10,10" />' . PHP_EOL;
-    
-    $cw = converterGeoPixel(66.5622, 180, $largura, $altura, $projecao);
-    $ce = converterGeoPixel(66.5622, -180, $largura, $altura, $projecao);
-    $svg .= '<line x1="' . $ce['x'] . '" y1="' . $ce['y'] . '" x2="' . $cw['x'] . '" y2="' . $cw['y'] . '" stroke-dasharray="10,10" />' . PHP_EOL;
-    $cw = converterGeoPixel(-66.5622, 180, $largura, $altura, $projecao);
-    $ce = converterGeoPixel(-66.5622, -180, $largura, $altura, $projecao);
-    $svg .= '<line x1="' . $ce['x'] . '" y1="' . $ce['y'] . '" x2="' . $cw['x'] . '" y2="' . $cw['y'] . '" stroke-dasharray="10,10" />' . PHP_EOL;
+    if ($projecao == 'W') {
+        $svg .= calcularCaminhoCirculo($cancer, $largura, $altura, $projecao);
+        $svg .= calcularCaminhoCirculo($capricornio, $largura, $altura, $projecao);
+        $svg .= calcularCaminhoCirculo($artico, $largura, $altura, $projecao);
+        $svg .= calcularCaminhoCirculo($antartico, $largura, $altura, $projecao);
+    } else {
+        $svg .= calcularLinhaCirculo($cancer, $largura, $altura, $projecao);
+        $svg .= calcularLinhaCirculo($capricornio, $largura, $altura, $projecao);
+        $svg .= calcularLinhaCirculo($artico, $largura, $altura, $projecao);
+        $svg .= calcularLinhaCirculo($antartico, $largura, $altura, $projecao);
+    }
     
     return $svg;
 }
 
+function calcularCaminhoCirculo(float $latitude, int $largura, int $altura, string $projecao): string
+{
+    $svg = '';
+    $ponto = converterGeoPixel($latitude, -180, $largura, $altura, $projecao);
+    $svg .= '<path d="M' . $ponto['x'] . ',' . $ponto['y'];
+    for ($longitude = -179; $longitude <= 180; $longitude++) {
+        $ponto = converterGeoPixel($latitude, $longitude, $largura, $altura, $projecao);
+        $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
+    }
+    $svg .= '" stroke-dasharray="10,10" />' . PHP_EOL;
+    return $svg;
+}
+
+function calcularLinhaCirculo(float $latitude, int $largura, int $altura, string $projecao): string
+{
+    $ocidente = converterGeoPixel($latitude, -180, $largura, $altura, $projecao);
+    $oriente = converterGeoPixel($latitude, 180, $largura, $altura, $projecao);
+    return '<line x1="' . $ocidente['x'] . '" y1="' . $ocidente['y'] . '" x2="' . $oriente['x'] . '" y2="' . $oriente['y'] . '" stroke-dasharray="10,10" />' . PHP_EOL;
+}
+
 function exibirEquador(int $largura, int $altura, string $projecao): string
 {
-    $w = converterGeoPixel(0, 180, $largura, $altura, $projecao);
-    $e = converterGeoPixel(0, -180, $largura, $altura, $projecao);
-    return '<line x1="' . $e['x'] . '" y1="' . $e['y'] . '" x2="' . $w['x'] . '" y2="' . $w['y'] . '" />' . PHP_EOL;
+    $ocidente = converterGeoPixel(0, -180, $largura, $altura, $projecao);
+    $oriente = converterGeoPixel(0, 180, $largura, $altura, $projecao);
+    return '<line x1="' . $ocidente['x'] . '" y1="' . $ocidente['y'] . '" x2="' . $oriente['x'] . '" y2="' . $oriente['y'] . '" />' . PHP_EOL;
 }
 
 function exibirGreenwich(int $largura, int $altura, string $projecao): string
