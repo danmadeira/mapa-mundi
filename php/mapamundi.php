@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 
 $largura = filter_input(INPUT_GET, 'largura', FILTER_VALIDATE_INT, array('options' => array('default' => 1200, 'min_range' => 720, 'max_range' => 3840)));
 $altura = filter_input(INPUT_GET, 'altura', FILTER_VALIDATE_INT, array('options' => array('default' => 566, 'min_range' => 480, 'max_range' => 2160)));
-$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/[ekmnNprs]/')));
+$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/[ekmnNprsw]/')));
 
 echo montarPagina($largura, $altura, $projecao);
 
@@ -139,6 +139,16 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $x = floor($centro['x'] + (calcularSinusoidalX($latitude, $longitude) * $modulo));
             $y = floor($centro['y'] - (calcularSinusoidalY($latitude) * $modulo));
             break;
+            
+        case 'w': // Wagner VI projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularWagnerVIX(0, 180) * 2);
+            } else {
+                $modulo = $altura / (calcularWagnerVIY(90) * 2);
+            }
+            $x = floor($centro['x'] + (calcularWagnerVIX($latitude, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularWagnerVIY($latitude) * $modulo));
+            break;
     }
     /*
     if ($largura / $altura < 2) { $modulo = $largura / 360; }
@@ -256,6 +266,19 @@ function calcularSinusoidalX(float $latitude, float $longitude): float
 
 function calcularSinusoidalY(float $latitude): float
 {
+    return $latitude;
+}
+
+function calcularWagnerVIX(float $latitude, float $longitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    $longitude = $longitude * (3.14159265359 / 180);
+    return ($longitude * sqrt(1 - 3 * pow($latitude / 3.14159265359, 2)));
+}
+
+function calcularWagnerVIY(float $latitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
     return $latitude;
 }
 

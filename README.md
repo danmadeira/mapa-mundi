@@ -4,7 +4,7 @@ Um mapa da superfície total da Terra, projetado a partir dos dados fornecidos p
 
 O Natural Earth fornece arquivos, no formato GeoJSON, com as coordenadas geográficas de todo o perímetro de cada país. Este script em PHP, converte estas coordenadas geográficas em pontos para a construção dos polígonos em SVG. A base do SimpleMaps foi importada para o banco de dados MySQL, para consulta pelo script, e assim, pontuar as cidades capitais.
 
-Este script em PHP foi desenvolvido de uma forma simples para facilitar o entendimento dos algoritmos e aceita variáveis externas, pelo método GET, para definir a largura e a altura do mapa, como também o algoritmo de projeção (equidistante, sinusoidal, Mercator, Kavrayskiy VII, Natural Earth, Patterson ou Robinson).
+Este script em PHP foi desenvolvido de uma forma simples para facilitar o entendimento dos algoritmos e aceita variáveis externas, pelo método GET, para definir a largura e a altura do mapa, como também o algoritmo de projeção (equidistante, sinusoidal, Mercator, Kavrayskiy VII, Natural Earth, Patterson, Robinson ou Wagner VI).
 
 Ex.: mapamundi.php?largura=1000&altura=500&projecao=r
 
