@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 
 $largura = filter_input(INPUT_GET, 'largura', FILTER_VALIDATE_INT, array('options' => array('default' => 1200, 'min_range' => 720, 'max_range' => 3840)));
 $altura = filter_input(INPUT_GET, 'altura', FILTER_VALIDATE_INT, array('options' => array('default' => 566, 'min_range' => 480, 'max_range' => 2160)));
-$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/[ceEhkmMnNprswW]/')));
+$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/[ceEhkmMnNprstwW]/')));
 
 echo montarPagina($largura, $altura, $projecao);
 
@@ -60,17 +60,7 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
     $centro = coordenarCentro($largura, $altura);
     
     switch ($projecao) {
-        case 'c': // Mercator projection
-            if ($largura / $altura < 2) {
-                $modulo = $largura / (calcularMercatorX(180) * 2 * 1.4844222297453322);
-            } else {
-                $modulo = $altura / (calcularMercatorY(90) * 2);
-            }
-            $x = floor($centro['x'] + (calcularMercatorX($longitude) * $modulo));
-            $y = floor($centro['y'] - (calcularMercatorY($latitude) * $modulo));
-            break;
-            
-        case 'e': // equirectangular projection // plate carrée
+        case 'c': // equirectangular projection // plate carrée
             if ($largura / $altura < 2) {
                 $modulo = $largura / 360;
             } else {
@@ -80,7 +70,7 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $y = floor($centro['y'] - ($latitude * $modulo));
             break;
             
-        case 'E': // Eckert IV projection
+        case 'e': // Eckert IV projection
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularEckertIVX(0, 180) * 2);
             } else {
@@ -88,6 +78,16 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             }
             $x = floor($centro['x'] + (calcularEckertIVX($latitude, $longitude) * $modulo));
             $y = floor($centro['y'] - (calcularEckertIVY($latitude) * $modulo));
+            break;
+            
+        case 'E': // Eckert VI projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularEckertVIX(0, 180) * 2);
+            } else {
+                $modulo = $altura / (calcularEckertVIY(90) * 2);
+            }
+            $x = floor($centro['x'] + (calcularEckertVIX($latitude, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularEckertVIY($latitude) * $modulo));
             break;
             
         case 'h': // Hammer projection
@@ -179,6 +179,16 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             }
             $x = floor($centro['x'] + (calcularSinusoidalX($latitude, $longitude) * $modulo));
             $y = floor($centro['y'] - (calcularSinusoidalY($latitude) * $modulo));
+            break;
+            
+        case 't': // Mercator projection
+            if ($largura / $altura < 2) {
+                $modulo = $largura / (calcularMercatorX(180) * 2 * 1.4844222297453322);
+            } else {
+                $modulo = $altura / (calcularMercatorY(90) * 2);
+            }
+            $x = floor($centro['x'] + (calcularMercatorX($longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularMercatorY($latitude) * $modulo));
             break;
             
         case 'w': // Wagner VI projection
@@ -394,7 +404,7 @@ function calcularNaturalEarthIIX(float $latitude, float $longitude): float
     $latitude2 = $latitude * $latitude;
     $latitude4 = $latitude2 * $latitude2;
     $latitude6 = $latitude4 * $latitude2;
-    return ($longitude * (0.84719 - 0.13063 * $latitude2 + $latitude6 * $latitude6 * (-0.04515 + 0.05494 * $latitude2 + 0.02326 * $latitude4 + 0.00331 * $latitude6)));
+    return ($longitude * (0.84719 - 0.13063 * $latitude2 + $latitude6 * $latitude6 * (0.05494 * $latitude2 + 0.02326 * $latitude4 + 0.00331 * $latitude6 - 0.04515)));
 }
 
 function calcularNaturalEarthIIY(float $latitude): float
@@ -403,7 +413,7 @@ function calcularNaturalEarthIIY(float $latitude): float
     //return (1.01183 * $latitude - 0.02625 * pow($latitude, 9) + 0.01926 * pow($latitude, 11) - 0.00396 * pow($latitude, 13));
     $latitude2 = $latitude * $latitude;
     $latitude4 = $latitude2 * $latitude2;
-    return ($latitude * (1.01183 + $latitude4 * $latitude4 * (-0.02625 + 0.01926 * $latitude2 - 0.00396 * $latitude4)));
+    return ($latitude * (1.01183 + $latitude4 * $latitude4 * (0.01926 * $latitude2 - 0.00396 * $latitude4 - 0.02625)));
 }
 
 function calcularPattersonX(float $longitude): float

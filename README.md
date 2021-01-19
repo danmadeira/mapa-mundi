@@ -9,6 +9,7 @@ Este script em PHP foi desenvolvido de uma forma simples para facilitar o entend
 ### Projeções
 
 - Eckert IV;
+- Eckert VI;
 - Equidistante;
 - Hammer;
 - Kavrayskiy VII;
