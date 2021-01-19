@@ -6,6 +6,8 @@ O Natural Earth fornece arquivos, no formato GeoJSON, com as coordenadas geográ
 
 Este script em PHP foi desenvolvido de uma forma simples para facilitar o entendimento dos algoritmos e aceita variáveis externas, pelo método GET, para definir a largura e a altura do mapa, como também o algoritmo de projeção.
 
+Ex.: mapamundi.php?largura=1000&altura=500&projecao=r
+
 ### Projeções
 
 - Eckert IV;
@@ -17,13 +19,12 @@ Este script em PHP foi desenvolvido de uma forma simples para facilitar o entend
 - Miller cylindrical;
 - Mollweide;
 - Natural Earth;
+- Natural Earth II;
 - Patterson;
 - Robinson;
 - Sinusoidal;
 - Wagner VI;
 - Winkel Tripel.
-
-Ex.: mapamundi.php?largura=1000&altura=500&projecao=r
 
 ### O mapa
 

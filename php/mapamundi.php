@@ -141,7 +141,7 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $y = floor($centro['y'] - (calcularNaturalEarthY($latitude) * $modulo));
             break;
             
-        case 'N': // Natural Earth II projection (fix needed)
+        case 'N': // Natural Earth II projection
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularNaturalEarthIIX(0, 180) * 2);
             } else {
@@ -400,11 +400,11 @@ function calcularNaturalEarthIIX(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
     $longitude = $longitude * (3.14159265359 / 180);
-    //return ($longitude * (0.84719 - 0.13063 * pow($latitude, 2) - 0.04515 * pow($latitude, 12) + 0.05494 * pow($latitude, 14) + 0.02326 * pow($latitude, 16) + 0.00331 * pow($latitude, 18)));
+    //return ($longitude * (0.84719 - 0.13063 * pow($latitude, 2) - 0.04515 * pow($latitude, 12) + 0.05494 * pow($latitude, 14) - 0.02326 * pow($latitude, 16) + 0.00331 * pow($latitude, 18)));
     $latitude2 = $latitude * $latitude;
     $latitude4 = $latitude2 * $latitude2;
-    $latitude6 = $latitude4 * $latitude2;
-    return ($longitude * (0.84719 - 0.13063 * $latitude2 + $latitude6 * $latitude6 * (0.05494 * $latitude2 + 0.02326 * $latitude4 + 0.00331 * $latitude6 - 0.04515)));
+    $latitude6 = $latitude2 * $latitude4;
+    return ($longitude * (0.84719 - 0.13063 * $latitude2 + $latitude6 * $latitude6 * (-0.04515 + 0.05494 * $latitude2 - 0.02326 * $latitude4 + 0.00331 * $latitude6)));
 }
 
 function calcularNaturalEarthIIY(float $latitude): float
