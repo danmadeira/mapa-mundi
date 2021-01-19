@@ -8,10 +8,13 @@ Este script em PHP foi desenvolvido de uma forma simples para facilitar o entend
 
 ### Projeções
 
+- Eckert IV;
 - Equidistante;
+- Hammer;
 - Kavrayskiy VII;
 - Mercator;
 - Miller cylindrical;
+- Mollweide;
 - Natural Earth;
 - Patterson;
 - Robinson;
@@ -75,3 +78,5 @@ Volume 1, Issue 2, pp. 123–133, 2015.
 - W3C *Scalable Vector Graphics (SVG) 1.1 (Second Edition)*, W3C Recommendation 16 August 2011. Disponível em: <https://www.w3.org/TR/SVG11/>
 
 - WEISSTEIN, E. W. *Miller Cylindrical Projection*. MathWorld: A Wolfram Web Resource. Disponível em: <https://mathworld.wolfram.com/MillerCylindricalProjection.html>
+
+- WEISSTEIN, E. W. *Mollweide Projection*. MathWorld: A Wolfram Web Resource. Disponível em: <https://mathworld.wolfram.com/MollweideProjection.html>
