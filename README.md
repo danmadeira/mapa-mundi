@@ -52,6 +52,8 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 
 - IPBUKER, C. *A computational approach to the Robinson projection*. Survey Review. Volume 38, Issue 297, pp. 204-217, July 2005.
 
+- JENNY, B. *Java Map Projection Library*. Cartography and Geovisualization Group, Oregon State University. June 12, 2019. Disponível em: <https://github.com/OSUCartography/JMapProjLib>
+
 - KELSO, N. V. *Natural Earth vector*. Disponível em: <https://github.com/nvkelso/natural-earth-vector>
 
 - KELSO, N. V.; PATTERSON, T. *Natural Earth*. Disponível em: <https://www.naturalearthdata.com/>
@@ -60,9 +62,13 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 
 - NIMA *Technical Report 8350.2, Department of Defense World Geodetic System 1984: Its Definition and Relationships with Local Geodetic Systems, Third Edition, Amendment 1*. Geodesy and Geophysics Department, National Imagery and Mapping Agency. January 3, 2000.
 
+- OSGeo Project. *GeoTools*, Release 24.2. Open Source Geospatial Foundation, January 20, 2021. Disponível em: <https://geotools.org/>
+
 - PATTERSON, T.; ŠAVRIČ, B.; JENNY, B. *Introducing the Patterson Cylindrical Projection*. Cartographic Perspectives, Number 78, pp. 77-81, December 2014. Disponível em: <https://cartographicperspectives.org/index.php/journal/article/view/cp78-patterson-et-al/1361>
 
 - PEARSON, F. *Map Projections: Theory and Applications*. CRC Press, Taylor & Francis Group, 1990.
+
+- PROJ contributors *PROJ coordinate transformation software library*, Release 7.2.1. Open Source Geospatial Foundation, January 1st 2021. Disponível em: <https://proj.org/>
 
 - ŠAVRIČ, B.; JENNY, B.; PATTERSON, T.; PETROVIČ, D.; HURNI, L. *A Polynomial Equation for the Natural Earth Projection*. Cartography and Geographic Information Science, Vol. 38, No. 4, pp. 363-372, 2011.
 
