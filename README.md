@@ -30,7 +30,7 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 
 ![Mapa-múndi](img/mapamundi.svg?raw=true)
 
-<p align="center">(projeção Natural Earth II)</p>
+<p align="center">projeção Natural Earth II</p>
 
 ### Referências
 
@@ -41,6 +41,8 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 - COWBURN, P. e col. *Manual do PHP*. PHP Documentation Group. 25 de Dezembro de 2020. Disponível em: <https://www.php.net/manual/pt_BR/index.php>
 
 - DEAKIN, R. E. *A Guide to the Mathematics of Map Projections*. Victorian Tasmanian Survey Conference: Across the Strait, Launceston Tasmania. April 15-17, 2004.
+
+- DMA WGS 84 Development Committee *Supplement to Department of Defense World Geodetic System 1984 Technical Report: Part II - Parameters, Formulas, and Graphics for the Practical Application of WGS 84*. Technical Report 8350.2-B, Second Printing. Defense Mapping Agency, December 1st, 1987. Disponível em: <https://earth-info.nga.mil/GandG/publications/tr8350.2/TR8350.2-b/DMA%20TR8350.pdf>
 
 - ESRI *Understanding Map Projections*. GIS by ESRI. Environmental Systems Research Institute, 2000. Disponível em: <http://downloads2.esri.com/support/documentation/ao_/710Understanding_Map_Projections.pdf>
 
@@ -60,7 +62,9 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 
 - MOON, P.; SPENCER, D. E. *Field Theory Handbook: Including Coordinate Systems, Differential Equations and Their Solutions*. Corrected 3rd Printing, Springer-Verlag, 1988.
 
-- NIMA *Technical Report 8350.2, Department of Defense World Geodetic System 1984: Its Definition and Relationships with Local Geodetic Systems, Third Edition, Amendment 1*. Geodesy and Geophysics Department, National Imagery and Mapping Agency. January 3, 2000.
+- NGA *Map Projections for GEOINT Content, Products, and Applications*. Standardization Implementation Guidance 28, Version 1.0. National Geospatial-Intelligence Agency Standardization Document. U.S.A., December 13, 2017. Disponível em: <ftp://ftp.nga.mil/pub2/gandg/website/coordsys/resources/NGA.SIG.0028_1.0_MAPPROJ.PDF>
+
+- NIMA *Technical Report 8350.2, Department of Defense World Geodetic System 1984: Its Definition and Relationships with Local Geodetic Systems, Third Edition, Amendment 1*. Geodesy and Geophysics Department, National Imagery and Mapping Agency. January 3, 2000. Disponível em: <https://earth-info.nga.mil/GandG/publications/tr8350.2/wgs84fin.pdf>
 
 - OSGeo Project. *GeoTools*, Release 24.2. Open Source Geospatial Foundation, January 20, 2021. Disponível em: <https://geotools.org/>
 
@@ -81,7 +85,7 @@ Volume 1, Issue 2, pp. 123–133, 2015.
 
 - SNYDER, J. P. *Flattening the Earth: Two thousand years of map projections*. University of Chicago Press, Chicago, 1993.
 
-- SNYDER, J. P. *Map Projections - A Working Manual*, U.S. Geological Survey Professional Paper 1395, Supersedes USGS Bulletin 1532, United States Government Printing Office, Washington, 1987.
+- SNYDER, J. P. *Map Projections - A Working Manual*, U.S. Geological Survey Professional Paper 1395, Supersedes USGS Bulletin 1532, United States Government Printing Office, Washington, 1987. Disponível em: <https://pubs.usgs.gov/pp/1395/report.pdf>
 
 - W3C *Scalable Vector Graphics (SVG) 1.1 (Second Edition)*, W3C Recommendation 16 August 2011. Disponível em: <https://www.w3.org/TR/SVG11/>
 
