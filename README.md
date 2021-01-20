@@ -6,7 +6,7 @@ O Natural Earth fornece arquivos, no formato GeoJSON, com as coordenadas geográ
 
 Este script em PHP foi desenvolvido de uma forma simples para facilitar o entendimento dos algoritmos e aceita variáveis externas, pelo método GET, para definir a largura e a altura do mapa, como também o algoritmo de projeção.
 
-Ex.: mapamundi.php?largura=1000&altura=500&projecao=r
+Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 
 ### Projeções
 
@@ -30,7 +30,7 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=r
 
 ![Mapa-múndi](img/mapamundi.svg?raw=true)
 
-(projeção Natural Earth)
+(projeção Natural Earth II)
 
 ### Referências
 
