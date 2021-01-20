@@ -30,7 +30,7 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 
 ![Mapa-múndi](img/mapamundi.svg?raw=true)
 
-(projeção Natural Earth II)
+<p align="center">(projeção Natural Earth II)</p>
 
 ### Referências
 
