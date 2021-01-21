@@ -52,6 +52,8 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 
 - HOOIJBERG, M. *Practical Geodesy: Using Computers*. Springer-Verlag, Berlin, Heidelberg, 1997.
 
+- IOGP *Coordinate Conversions and Transformations including Formulas*. IOGP Publication 373-7-2, Geomatics Guidance Note number 7, part 2, October 2020. Disponível em: <https://epsg.org/guidance-notes.html>
+
 - IPBUKER, C. *A computational approach to the Robinson projection*. Survey Review. Volume 38, Issue 297, pp. 204-217, July 2005.
 
 - JENNY, B. *Java Map Projection Library*. Cartography and Geovisualization Group, Oregon State University. June 12, 2019. Disponível em: <https://github.com/OSUCartography/JMapProjLib>
@@ -82,6 +84,8 @@ Volume 1, Issue 2, pp. 123–133, 2015.
 - SimpleMaps.com *How to import a CSV file into MySQL*. Tutorials and Articles. Disponível em: <https://simplemaps.com/resources/import-csv-mysql>
 
 - SimpleMaps.com *World Cities Database*. SimpleMaps Worldcities Basic v1.73. Disponível em: <https://simplemaps.com/data/world-cities>
+
+- SNYDER, J. P.; VOXLAND, P. M. *An Album of Map Projections*, 2nd Printing. U.S. Geological Survey Professional Paper 1453, United States Government Printing Office, Washington, 1989. Disponível em: <https://pubs.usgs.gov/pp/1453/report.pdf>
 
 - SNYDER, J. P. *Flattening the Earth: Two thousand years of map projections*. University of Chicago Press, Chicago, 1993.
 
