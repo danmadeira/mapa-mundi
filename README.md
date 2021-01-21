@@ -8,7 +8,7 @@ Este script em PHP foi desenvolvido de uma forma simples para facilitar o entend
 
 Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 
-### Projeções
+### Sistemas de projeções
 
 - Eckert IV;
 - Eckert VI;
@@ -25,6 +25,20 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 - Sinusoidal;
 - Wagner VI;
 - Winkel Tripel.
+
+### Cálculo da conversão
+
+Para elaborar um mapa é necessário determinar um método no qual cada ponto na superfície terrestre corresponda a um ponto no plano e vice-versa. Existem diversos métodos e estes métodos são chamados sistemas de projeções. Um sistema de projeção adota um modelo matemático do planeta e relaciona os pontos estabelecendo uma escala e um sistema de coordenadas.
+
+O sistema de coordenadas geográficas expressa a posição de um ponto na superfície esférica do globo terrestre. O globo é dividido em latitudes que vão de 0 a 90 graus, a partir da linha do Equador, separando os hemisférios Norte e Sul, e longitudes que vão de 0 a 180 graus, a partir do meridiano de Greenwich, separando os hemisférios Leste e Oeste. A latitude e a longitude, na notação decimal, é indicada com valor negativo quando é uma latitude Sul ou uma longitude Oeste.
+
+O sistema de coordenadas cartesiano serve para especificar pontos num determinado espaço plano. Tem uma semelhança com o sistema de coordenadas geográficas pois a origem, a coordenada (0,0), está no centro. No entanto, em computação gráfica, as imagens possuem um sistema de coordenadas de pixel, onde a origem está no canto superior esquerdo. Em uma imagem, as coordenadas sempre possuem valores positivos, que totalizam na largura e na altura da imagem.
+
+Para adaptar um sistema de coordenadas, onde é possível valores negativos, em um sistema que só adote valores positivos, usa-se um falso leste e um falso norte. São valores lineares que são acrescidos na equação para que, respectivamente, as coordenadas (x,y) não fiquem com os valores negativos. Trata-se de um deslocamento do ponto para compensar a diferença na coordenada. Neste *script*, o falso leste e o falso norte estão implementados pelas coordenadas do centro da imagem.
+
+E ainda, para regular as proporções entre os sistemas de coordenadas, este *script* adota uma unidade de medida, na forma de um módulo, que é calculado dependendo da razão entre a largura e a altura da imagem. Esta razão da imagem é comparada com a razão nativa do respectivo sistema de projeção, razão dada entre a linha do Equador e o meridiano principal, para escolher se o módulo será baseado na largura/paralelo ou na altura/meridiano.
+
+Tudo na imagem é construído de acordo com a projeção escolhida e proporcionalmente à dimensão da imagem. Este *script* constrói os polígonos dos países, que juntos formam os continentes, as linhas imaginárias dos paralelos e meridianos, o fundo azul dentro dos limites da projeção etc.
 
 ### O mapa
 
