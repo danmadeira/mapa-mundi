@@ -1,10 +1,10 @@
 ## Mapa-múndi com cidades capitais
 
-Um mapa da superfície total da Terra, projetado a partir dos dados fornecidos por [Natural Earth](https://www.naturalearthdata.com/) e da base de dados, com 26.569 cidades do mundo, fornecida gratuitamente por [SimpleMaps.com](https://simplemaps.com/data/world-cities).
+Um mapa da superfície total da Terra, construído por um *script* em PHP, projetado a partir dos dados fornecidos por [Natural Earth](https://www.naturalearthdata.com/) e da base de dados, com 26.569 cidades do mundo, fornecida gratuitamente por [SimpleMaps.com](https://simplemaps.com/data/world-cities).
 
-O Natural Earth fornece arquivos, no formato GeoJSON, com as coordenadas geográficas de todo o perímetro de cada país. Este script em PHP, converte estas coordenadas geográficas em pontos para a construção dos polígonos em SVG. A base do SimpleMaps foi importada para o banco de dados MySQL, para consulta pelo script, e assim, pontuar as cidades capitais.
+O Natural Earth fornece arquivos, no formato GeoJSON, com as coordenadas geográficas de todo o perímetro de cada país. Este *script* em PHP, converte estas coordenadas geográficas em pontos para a construção dos polígonos em SVG. A base do SimpleMaps foi importada para o banco de dados MySQL, para consulta pelo *script*, e assim, pontuar as cidades capitais.
 
-Este script em PHP foi desenvolvido de uma forma simples para facilitar o entendimento dos algoritmos e aceita variáveis externas, pelo método GET, para definir a largura e a altura do mapa, como também o algoritmo de projeção.
+Este *script* em PHP foi desenvolvido de uma forma simples para facilitar o entendimento dos algoritmos e aceita variáveis externas, pelo método GET, para definir a largura e a altura do mapa, como também o algoritmo de projeção.
 
 Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 
@@ -13,6 +13,7 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 - Eckert IV;
 - Eckert VI;
 - Equidistante;
+- Gott equal-area elliptical;
 - Hammer;
 - Kavrayskiy VII;
 - Mercator;
@@ -62,7 +63,9 @@ Tudo na imagem é construído de acordo com a projeção escolhida e proporciona
 
 - FENNA, D. *Cartographic Science: A Compendium of Map Projections, with Derivations*. CRC Press, Taylor & Francis Group, 2007.
 
-- GOLDBERG, D. M.; GOTT, J. R. *Flexion and Skewness in Map Projections of the Earth*. Cartographica: The International Journal for Geographic Information and Geovisualization. Volume 42 Issue 4, pp. 297-318, December 18, 2007.
+- GOLDBERG, D. M.; GOTT, J. R. *Flexion and Skewness in Map Projections of the Earth*. Cartographica: The International Journal for Geographic Information and Geovisualization. Volume 42 Issue 4, pp. 297-318, December 18, 2007. Disponível em: <https://www.physics.drexel.edu/~goldberg/projections/goldberg_gott.pdf>
+
+- GOTT, J. R.; MUGNOLO, C.; COLLEY, W. N. *Map Projections Minimizing Distance Errors*. Cartographica: The International Journal for Geographic Information and Geovisualization, Volume 42 Issue 3, pp. 219-234, Fall 2007. Disponível em: <https://arxiv.org/pdf/astro-ph/0608500.pdf>
 
 - HOOIJBERG, M. *Practical Geodesy: Using Computers*. Springer-Verlag, Berlin, Heidelberg, 1997.
 
@@ -75,6 +78,8 @@ Tudo na imagem é construído de acordo com a projeção escolhida e proporciona
 - KELSO, N. V. *Natural Earth vector*. Disponível em: <https://github.com/nvkelso/natural-earth-vector>
 
 - KELSO, N. V.; PATTERSON, T. *Natural Earth*. Disponível em: <https://www.naturalearthdata.com/>
+
+- KENNEDY, M.; KOPP, S. *Understanding Map Projections*. GIS by ESRI. Esri Press, 2000. Disponível em: <https://giscourses.cfans.umn.edu/sites/giscourses.cfans.umn.edu/files/understanding_map_projections.pdf>
 
 - MOON, P.; SPENCER, D. E. *Field Theory Handbook: Including Coordinate Systems, Differential Equations and Their Solutions*. Corrected 3rd Printing, Springer-Verlag, 1988.
 
