@@ -2,7 +2,7 @@
 
 $largura = filter_input(INPUT_GET, 'largura', FILTER_VALIDATE_INT, array('options' => array('default' => 1000, 'min_range' => 250, 'max_range' => 4000)));
 $altura = filter_input(INPUT_GET, 'altura', FILTER_VALIDATE_INT, array('options' => array('default' => 500, 'min_range' => 250, 'max_range' => 4000)));
-$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/[ceEgGhkmMnNprstwW]/')));
+$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/^[a-zA-Z]$/')));
 
 echo montarPagina($largura, $altura, $projecao);
 
@@ -62,16 +62,7 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
     $centro = coordenarCentro($largura, $altura);
     
     switch ($projecao) {
-        case 'c': // equirectangular projection // plate carrée
-            if ($largura / $altura < 2) {
-                $modulo = $largura / 360;
-            } else {
-                $modulo = $altura / 180;
-            }
-            $x = floor($centro['x'] + ($longitude * $modulo));
-            $y = floor($centro['y'] - ($latitude * $modulo));
-            break;
-            
+
         case 'e': // Eckert IV projection
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularEckertIVX(0, 180) * 2);
@@ -94,15 +85,15 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             
         case 'g': // Gott equal-area elliptical projection
             if ($largura / $altura < 1.621) {
-                $modulo = $largura / (calcularGottEqualareaEllipticalX(0, 180) * 2);
+                $modulo = $largura / (calcularGottEqualAreaEllipticalX(0, 180) * 2);
             } else {
-                $modulo = $altura / (calcularGottEqualareaEllipticalY(90, 0) * 2);
+                $modulo = $altura / (calcularGottEqualAreaEllipticalY(90, 0) * 2);
             }
-            $x = floor($centro['x'] + (calcularGottEqualareaEllipticalX($latitude, $longitude) * $modulo));
-            $y = floor($centro['y'] - (calcularGottEqualareaEllipticalY($latitude, $longitude) * $modulo));
+            $x = floor($centro['x'] + (calcularGottEqualAreaEllipticalX($latitude, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularGottEqualAreaEllipticalY($latitude, $longitude) * $modulo));
             break;
             
-        case 'G': // Gott–Mugnolo azimuthal projection (ajuste necessário)
+        case 'G': // Gott–Mugnolo azimuthal projection // (necessita ajuste)
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularGottMugnoloAzimuthalX(0, 180) * 2);
             } else {
@@ -130,6 +121,16 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             }
             $x = floor($centro['x'] + (calcularKavrayskiyVIIX($latitude, $longitude) * $modulo));
             $y = floor($centro['y'] - (calcularKavrayskiyVIIY($latitude) * $modulo));
+            break;
+            
+        case 'l': // Lambert azimuthal equal-area projection // (necessita ajuste)
+            if ($largura / $altura < 1) {
+                $modulo = $largura / (calcularLambertAzimuthalEqualAreaX(0, 180) * 3.14159265359);
+            } else {
+                $modulo = $altura / (calcularLambertAzimuthalEqualAreaY(90, 0) * 3.14159265359);
+            }
+            $x = floor($centro['x'] + (calcularLambertAzimuthalEqualAreaX($latitude, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularLambertAzimuthalEqualAreaY($latitude, $longitude) * $modulo));
             break;
             
         case 'm': // Miller cylindrical projection
@@ -232,6 +233,15 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $x = floor($centro['x'] + (calcularWinkelIIIX($latitude, $longitude) * $modulo));
             $y = floor($centro['y'] - (calcularWinkelIIIY($latitude, $longitude) * $modulo));
             break;
+            
+        default: // c: equirectangular projection -> plate carrée
+            if ($largura / $altura < 2) {
+                $modulo = $largura / 360;
+            } else {
+                $modulo = $altura / 180;
+            }
+            $x = floor($centro['x'] + ($longitude * $modulo));
+            $y = floor($centro['y'] - ($latitude * $modulo));
     }
     
     return array('x' => $x, 'y' => $y);
@@ -299,7 +309,7 @@ function calcularEckertVIY(float $latitude): float
     return (2 * $latitude / sqrt(2 + 3.14159265359));
 }
 
-function calcularGottEqualareaEllipticalX(float $latitude, float $longitude): float
+function calcularGottEqualAreaEllipticalX(float $latitude, float $longitude): float
 {
     $longitude = $longitude * (3.14159265359 / 180);
     $theta = $latitude * (3.14159265359 / 180);
@@ -320,7 +330,7 @@ function calcularGottEqualareaEllipticalX(float $latitude, float $longitude): fl
     return (sqrt(2) * sin($theta));
 }
 
-function calcularGottEqualareaEllipticalY(float $latitude, float $longitude): float
+function calcularGottEqualAreaEllipticalY(float $latitude, float $longitude): float
 {
     if ($longitude == 180) { $longitude--; } elseif ($longitude == -180) { $longitude++; } // remendo para limitar em 179
     $longitude = $longitude * (3.14159265359 / 180);
@@ -382,6 +392,35 @@ function calcularKavrayskiyVIIY(float $latitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
     return $latitude;
+}
+
+function calcularLambertAzimuthalEqualAreaX(float $latitude, float $longitude): float
+{
+    if ($longitude == 180) { $longitude--; } elseif ($longitude == -180) { $longitude++; } // remendo para limitar em 179
+    $latitude = $latitude * (3.14159265359 / 180);
+    $longitude = $longitude * (3.14159265359 / 180);
+    $coslat0 = 1;
+    $sinlat0 = 0;
+    $sinlat = sin($latitude);
+    $coslat = cos($latitude);
+    $sinlon = sin($longitude);
+    $coslon = cos($longitude);
+    $k = sqrt(2 / (1 + $sinlat0 * $sinlat + $coslat0 * $coslat * $coslon));
+    return ($k * $coslat * $sinlon);
+}
+
+function calcularLambertAzimuthalEqualAreaY(float $latitude, float $longitude): float
+{
+    if ($longitude == 180) { $longitude--; } elseif ($longitude == -180) { $longitude++; } // remendo para limitar em 179
+    $latitude = $latitude * (3.14159265359 / 180);
+    $longitude = $longitude * (3.14159265359 / 180);
+    $coslat0 = 1;
+    $sinlat0 = 0;
+    $sinlat = sin($latitude);
+    $coslat = cos($latitude);
+    $coslon = cos($longitude);
+    $k = sqrt(2 / (1 + $sinlat0 * $sinlat + $coslat0 * $coslat * $coslon));
+    return ($k * ($coslat0 * $sinlat - $sinlat0 * $coslat * $coslon));
 }
 
 function calcularMercatorX(float $longitude): float
@@ -625,25 +664,36 @@ function carregarMundo(): array
 function exibirFundoAzul(int $largura, int $altura, string $projecao): string
 {
     $svg = '';
-    $ponto = converterGeoPixel(90, -180, $largura, $altura, $projecao);
-    $svg .= '<path d="M' . $ponto['x'] . ',' . $ponto['y'];
-    for ($longitude = -179; $longitude <= 180; $longitude++) {
-        $ponto = converterGeoPixel(90, $longitude, $largura, $altura, $projecao);
-        $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
+    
+    if ($projecao == 'l') {
+        $centro = coordenarCentro($largura, $altura);
+        if ($largura / $altura < 1) {
+            $raio = $largura / calcularLambertAzimuthalEqualAreaX(0, 180) / 3.14159265359 * 2;
+        } else {
+            $raio = $altura / calcularLambertAzimuthalEqualAreaY(90, 0) / 3.14159265359 * 2;
+        }
+        $svg .= '<circle cx="' . $centro['x'] . '" cy="' . $centro['y'] . '" r="' . $raio . '" fill="rgb(174,214,241)" />';
+    } else {
+        $ponto = converterGeoPixel(90, -180, $largura, $altura, $projecao);
+        $svg .= '<path d="M' . $ponto['x'] . ',' . $ponto['y'];
+        for ($longitude = -179; $longitude <= 180; $longitude++) {
+            $ponto = converterGeoPixel(90, $longitude, $largura, $altura, $projecao);
+            $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
+        }
+        for ($latitude = 89; $latitude >= -90; $latitude--) {
+            $ponto = converterGeoPixel($latitude, 180, $largura, $altura, $projecao);
+            $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
+        }
+        for ($longitude = 179; $longitude >= -180; $longitude--) {
+            $ponto = converterGeoPixel(-90, $longitude, $largura, $altura, $projecao);
+            $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
+        }
+        for ($latitude = -89; $latitude <= 90; $latitude++) {
+            $ponto = converterGeoPixel($latitude, -180, $largura, $altura, $projecao);
+            $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
+        }
+        $svg .= ' Z" fill="rgb(174,214,241)" />' . PHP_EOL;
     }
-    for ($latitude = 89; $latitude >= -90; $latitude--) {
-        $ponto = converterGeoPixel($latitude, 180, $largura, $altura, $projecao);
-        $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
-    }
-    for ($longitude = 179; $longitude >= -180; $longitude--) {
-        $ponto = converterGeoPixel(-90, $longitude, $largura, $altura, $projecao);
-        $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
-    }
-    for ($latitude = -89; $latitude <= 90; $latitude++) {
-        $ponto = converterGeoPixel($latitude, -180, $largura, $altura, $projecao);
-        $svg .= ' L' . $ponto['x'] . ',' . $ponto['y'];
-    }
-    $svg .= ' Z" fill="rgb(174,214,241)" />' . PHP_EOL;
     return $svg;
 }
 
@@ -666,7 +716,7 @@ function exibirParalelos(int $largura, int $altura, string $projecao): string
     $svg = '';
     $paralelos = array(15, 30, 45, 60, 75, 90);
     foreach ($paralelos as $latitude) {
-        if ($projecao == 'W' or $projecao == 'h' or $projecao == 'g') {
+        if ($projecao == 'W' or $projecao == 'h' or $projecao == 'g' or $projecao == 'l') {
             $svg .= montarCaminhoParalelo($latitude, $largura, $altura, $projecao);
             $svg .= montarCaminhoParalelo(-$latitude, $largura, $altura, $projecao);
         } else {
@@ -729,7 +779,7 @@ function exibirCirculos(int $largura, int $altura, string $projecao): string
     $artico = 66.5622;
     $antartico = -66.5622;
     
-    if ($projecao == 'W' or $projecao == 'h' or $projecao == 'g') {
+    if ($projecao == 'W' or $projecao == 'h' or $projecao == 'g' or $projecao == 'l') {
         $svg .= montarCaminhoCirculo($cancer, $largura, $altura, $projecao);
         $svg .= montarCaminhoCirculo($capricornio, $largura, $altura, $projecao);
         $svg .= montarCaminhoCirculo($artico, $largura, $altura, $projecao);

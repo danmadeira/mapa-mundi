@@ -16,6 +16,7 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 - Gott equal-area elliptical;
 - Hammer;
 - Kavrayskiy VII;
+- Lambert azimuthal equal-area;
 - Mercator;
 - Miller cylindrical;
 - Mollweide;
@@ -111,6 +112,8 @@ Volume 1, Issue 2, pp. 123–133, 2015.
 - SNYDER, J. P. *Map Projections - A Working Manual*, U.S. Geological Survey Professional Paper 1395, Supersedes USGS Bulletin 1532, United States Government Printing Office, Washington, 1987. Disponível em: <https://pubs.usgs.gov/pp/1395/report.pdf>
 
 - W3C *Scalable Vector Graphics (SVG) 1.1 (Second Edition)*, W3C Recommendation 16 August 2011. Disponível em: <https://www.w3.org/TR/SVG11/>
+
+- WEISSTEIN, E. W. *Lambert Azimuthal Equal-Area Projection*. MathWorld: A Wolfram Web Resource. Disponível em: <https://mathworld.wolfram.com/LambertAzimuthalEqual-AreaProjection.html>
 
 - WEISSTEIN, E. W. *Miller Cylindrical Projection*. MathWorld: A Wolfram Web Resource. Disponível em: <https://mathworld.wolfram.com/MillerCylindricalProjection.html>
 
