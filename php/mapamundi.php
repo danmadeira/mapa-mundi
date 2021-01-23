@@ -1,8 +1,5 @@
 <?php
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 $largura = filter_input(INPUT_GET, 'largura', FILTER_VALIDATE_INT, array('options' => array('default' => 1000, 'min_range' => 250, 'max_range' => 4000)));
 $altura = filter_input(INPUT_GET, 'altura', FILTER_VALIDATE_INT, array('options' => array('default' => 500, 'min_range' => 250, 'max_range' => 4000)));
 $projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/[ceEgGhkmMnNprstwW]/')));
@@ -105,7 +102,7 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $y = floor($centro['y'] - (calcularGottEqualareaEllipticalY($latitude, $longitude) * $modulo));
             break;
             
-        case 'G': // Gott–Mugnolo azimuthal projection (fix needed)
+        case 'G': // Gott–Mugnolo azimuthal projection (ajuste necessário)
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularGottMugnoloAzimuthalX(0, 180) * 2);
             } else {
@@ -283,7 +280,7 @@ function calcularEckertIVY(float $latitude): float
         }
     }
     if ($i == 0) {
-        return ($theta < 0 ? -$cy : $cy);
+        return (($theta < 0) ? -$cy : $cy);
     } else {
         return ($cy * sin($theta));
     }
@@ -316,7 +313,7 @@ function calcularGottEqualareaEllipticalX(float $latitude, float $longitude): fl
         }
     }
     if ($i == 0) {
-        $theta = ($theta < 0) ? -3.14159265359 / 2 : 3.14159265359 / 2;
+        $theta = ($theta < 0) ? (-3.14159265359 / 2) : (3.14159265359 / 2);
     } else {
         $theta *= 0.5;
     }
@@ -339,7 +336,7 @@ function calcularGottEqualareaEllipticalY(float $latitude, float $longitude): fl
         }
     }
     if ($i == 0) {
-        $theta = ($theta < 0) ? -3.14159265359 / 2 : 3.14159265359 / 2;
+        $theta = ($theta < 0) ? (-3.14159265359 / 2) : (3.14159265359 / 2);
     } else {
         $theta *= 0.5;
     }
@@ -434,7 +431,7 @@ function calcularMollweideTheta(float $latitude): float
         }
     }
     if ($i == 0) {
-        $theta = ($theta < 0) ? -3.14159265359 / 2 : 3.14159265359 / 2;
+        $theta = ($theta < 0) ? (-3.14159265359 / 2) : (3.14159265359 / 2);
     } else {
         $theta *= 0.5;
     }
