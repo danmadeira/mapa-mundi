@@ -2,7 +2,7 @@
 
 $largura = filter_input(INPUT_GET, 'largura', FILTER_VALIDATE_INT, array('options' => array('default' => 1000, 'min_range' => 250, 'max_range' => 4000)));
 $altura = filter_input(INPUT_GET, 'altura', FILTER_VALIDATE_INT, array('options' => array('default' => 500, 'min_range' => 250, 'max_range' => 4000)));
-$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'k', 'regexp' => '/^[a-zA-Z]$/')));
+$projecao = filter_input(INPUT_GET, 'projecao', FILTER_VALIDATE_REGEXP, array('options' => array('default' => 'c', 'regexp' => '/^[a-zA-Z]$/')));
 
 echo montarPagina($largura, $altura, $projecao);
 
@@ -64,23 +64,25 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
     switch ($projecao) {
 
         case 'e': // Eckert IV projection
-            if ($largura / $altura < 2) {
+            if ($largura / $altura < 2.002) {
                 $modulo = $largura / (calcularEckertIVX(0, 180) * 2);
             } else {
-                $modulo = $altura / (calcularEckertIVY(90) * 2);
+                $modulo = $altura / (calcularEckertIVY(1.5697757215205) * 2);
             }
-            $x = floor($centro['x'] + (calcularEckertIVX($latitude, $longitude) * $modulo));
-            $y = floor($centro['y'] - (calcularEckertIVY($latitude) * $modulo));
+            $theta = calcularEckertIVTheta($latitude);
+            $x = floor($centro['x'] + (calcularEckertIVX($theta, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularEckertIVY($theta) * $modulo));
             break;
             
         case 'E': // Eckert VI projection
             if ($largura / $altura < 2) {
                 $modulo = $largura / (calcularEckertVIX(0, 180) * 2);
             } else {
-                $modulo = $altura / (calcularEckertVIY(90) * 2);
+                $modulo = $altura / (calcularEckertVIY(1.570796326795) * 2);
             }
-            $x = floor($centro['x'] + (calcularEckertVIX($latitude, $longitude) * $modulo));
-            $y = floor($centro['y'] - (calcularEckertVIY($latitude) * $modulo));
+            $theta = calcularEckertVITheta($latitude);
+            $x = floor($centro['x'] + (calcularEckertVIX($theta, $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularEckertVIY($theta) * $modulo));
             break;
             
         case 'g': // Gott equal-area elliptical projection
@@ -235,6 +237,9 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             break;
             
         default: // c: equirectangular projection -> plate carrée
+            /*
+             * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 219
+             */
             if ($largura / $altura < 2) {
                 $modulo = $largura / 360;
             } else {
@@ -247,68 +252,87 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
     return array('x' => $x, 'y' => $y);
 }
 
-function calcularEckertIVX(float $latitude, float $longitude): float
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 256
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 221
+ */
+function calcularEckertIVTheta(float $latitude): float
 {
-    $longitude = $longitude * (3.14159265359 / 180);
     $theta = $latitude * (3.14159265359 / 180);
-    $cx = 0.42223820031577120149;
-    $cp = 3.57079632679489661922;
-    $p = $cp * sin($theta);
-    $v = $theta * $theta;
-    $theta *= 0.895168 + $v * (0.0218849 + $v * 0.00826809);
-    for ($i = 6; $i > 0; $i--) {
-        $c = cos($theta);
-        $s = sin($theta);
-        $v = ($theta + $s * ($c + 2) - $p) / (1 + $c * ($c + 2) - $s * $s);
+    $k = (2 + (3.14159265359 / 2)) * sin($theta);
+    $theta = $theta / 2;
+    for ($i = 10; $i > 0; $i--) {
+        $sint = sin($theta);
+        $cost = cos($theta);
+        $v = ($theta + $sint * $cost + 2 * $sint - $k) / (2 * $cost * (1 + $cost));
         $theta -= $v;
         if (abs($v) < 1e-7) {
             break;
         }
     }
-    if ($i == 0) {
-        return ($cx * $longitude);
-    } else {
-        return ($cx * $longitude * (1 + cos($theta)));
-    }
+    
+    return $theta;
 }
 
-function calcularEckertIVY(float $latitude): float
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 256
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 221
+ */
+function calcularEckertIVX(float $theta, float $longitude): float
+{
+    $longitude = $longitude * (3.14159265359 / 180);
+    return ((2 / (sqrt(3.14159265359 * (4 + 3.14159265359)))) * $longitude * (1 + cos($theta)));
+}
+
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 256
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 221
+ */
+function calcularEckertIVY(float $theta): float
+{
+    return (2 * sqrt(3.14159265359 / (4 + 3.14159265359)) * sin($theta));
+}
+
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 257
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 220
+ */
+function calcularEckertVITheta(float $latitude): float
 {
     $theta = $latitude * (3.14159265359 / 180);
-    $cy = 1.32650042817700232218;
-    $cp = 3.57079632679489661922;
-    $p = $cp * sin($theta);
-    $v = $theta * $theta;
-    $theta *= 0.895168 + $v * (0.0218849 + $v * 0.00826809);
-    for ($i = 6; $i > 0; $i--) {
-        $c = cos($theta);
-        $s = sin($theta);
-        $v = ($theta + $s * ($c + 2) - $p) / (1 + $c * ($c + 2) - $s * $s);
+    $k = (1 + (3.14159265359 / 2)) * sin($theta);
+    for ($i = 10; $i > 0; $i--) {
+        $v = ($theta + sin($theta) - $k) / (1 + cos($theta));
         $theta -= $v;
         if (abs($v) < 1e-7) {
             break;
         }
     }
-    if ($i == 0) {
-        return (($theta < 0) ? -$cy : $cy);
-    } else {
-        return ($cy * sin($theta));
-    }
+    return $theta;
 }
 
-function calcularEckertVIX(float $latitude, float $longitude): float
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 257
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 220
+ */
+function calcularEckertVIX(float $theta, float $longitude): float
 {
-    $latitude = $latitude * (3.14159265359 / 180);
     $longitude = $longitude * (3.14159265359 / 180);
-    return ($longitude * (1 + cos($latitude)) / sqrt(2 + 3.14159265359));
+    return ($longitude * (1 + cos($theta)) / sqrt(2 + 3.14159265359));
 }
 
-function calcularEckertVIY(float $latitude): float
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 257
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 220
+ */
+function calcularEckertVIY(float $theta): float
 {
-    $latitude = $latitude * (3.14159265359 / 180);
-    return (2 * $latitude / sqrt(2 + 3.14159265359));
+    return (2 * $theta / sqrt(2 + 3.14159265359));
 }
 
+/*
+ * GOTT, J. R.; MUGNOLO, C.; COLLEY, W. N. Map Projections Minimizing Distance Errors. p 4
+ */
 function calcularGottEqualAreaEllipticalX(float $latitude, float $longitude): float
 {
     $longitude = $longitude * (3.14159265359 / 180);
@@ -330,6 +354,9 @@ function calcularGottEqualAreaEllipticalX(float $latitude, float $longitude): fl
     return (sqrt(2) * sin($theta));
 }
 
+/*
+ * GOTT, J. R.; MUGNOLO, C.; COLLEY, W. N. Map Projections Minimizing Distance Errors. p 4
+ */
 function calcularGottEqualAreaEllipticalY(float $latitude, float $longitude): float
 {
     if ($longitude == 180) { $longitude--; } elseif ($longitude == -180) { $longitude++; } // remendo para limitar em 179
@@ -353,6 +380,9 @@ function calcularGottEqualAreaEllipticalY(float $latitude, float $longitude): fl
     return ((3.14159265359 / (2 * sqrt(2))) * $lambda * cos($theta));
 }
 
+/*
+ * GOTT, J. R.; MUGNOLO, C.; COLLEY, W. N. Map Projections Minimizing Distance Errors. p 8
+ */
 function calcularGottMugnoloAzimuthalX(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -360,6 +390,9 @@ function calcularGottMugnoloAzimuthalX(float $latitude, float $longitude): float
     return (cos($longitude) * sin(0.446 * (3.14159265359 / 2 - $latitude)));
 }
 
+/*
+ * GOTT, J. R.; MUGNOLO, C.; COLLEY, W. N. Map Projections Minimizing Distance Errors. p 8
+ */
 function calcularGottMugnoloAzimuthalY(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -367,20 +400,35 @@ function calcularGottMugnoloAzimuthalY(float $latitude, float $longitude): float
     return (sin($longitude) * sin(0.446 * (3.14159265359 / 2 - $latitude)));
 }
 
+/*
+ * BUGAYEVSKIY, L. M.; SNYDER, J. P. *Map Projections A Reference Manual. p 176
+ * JENNY, B. Adaptive Composite Map Projections. p 3
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 232
+ */
 function calcularHammerX(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
     $longitude = $longitude * (3.14159265359 / 180);
-    return ((2 * sqrt(2) * cos($latitude) * sin($longitude / 2)) / sqrt(1 + cos($latitude) * cos($longitude / 2)));
+    $eta = sqrt(1 + cos($latitude) * cos($longitude / 2));
+    return ((2 * sqrt(2) * cos($latitude) * sin($longitude / 2)) / $eta);
 }
 
+/*
+ * BUGAYEVSKIY, L. M.; SNYDER, J. P. *Map Projections A Reference Manual. p 176
+ * JENNY, B. Adaptive Composite Map Projections. p 3
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 232
+ */
 function calcularHammerY(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
     $longitude = $longitude * (3.14159265359 / 180);
-    return ((sqrt(2) * sin($latitude)) / sqrt(1 + cos($latitude) * cos($longitude / 2)));
+    $eta = sqrt(1 + cos($latitude) * cos($longitude / 2));
+    return ((sqrt(2) * sin($latitude)) / $eta);
 }
 
+/*
+ * SNYDER, J. P. Flattening the Earth: Two thousand years of map projections. p 202
+ */
 function calcularKavrayskiyVIIX(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -388,15 +436,23 @@ function calcularKavrayskiyVIIX(float $latitude, float $longitude): float
     return (3 * $longitude / 2) * sqrt(1 / 3 - pow($latitude / 3.14159265359, 2));
 }
 
+/*
+ * SNYDER, J. P. Flattening the Earth: Two thousand years of map projections. p 202
+ */
 function calcularKavrayskiyVIIY(float $latitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
     return $latitude;
 }
 
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 185
+ */
 function calcularLambertAzimuthalEqualAreaX(float $latitude, float $longitude): float
 {
-    if ($longitude == 180) { $longitude--; } elseif ($longitude == -180) { $longitude++; } // remendo para limitar em 179
+    if ($latitude == 0 and ($longitude == 180 or $longitude == -180)) { // estes dois pontos retornam NaN
+        $latitude = 0.001;
+    }
     $latitude = $latitude * (3.14159265359 / 180);
     $longitude = $longitude * (3.14159265359 / 180);
     $coslat0 = 1;
@@ -409,9 +465,14 @@ function calcularLambertAzimuthalEqualAreaX(float $latitude, float $longitude): 
     return ($k * $coslat * $sinlon);
 }
 
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 185
+ */
 function calcularLambertAzimuthalEqualAreaY(float $latitude, float $longitude): float
 {
-    if ($longitude == 180) { $longitude--; } elseif ($longitude == -180) { $longitude++; } // remendo para limitar em 179
+    if ($latitude == 0 and ($longitude == 180 or $longitude == -180)) { // estes dois pontos retornam NaN
+        $latitude = 0.001;
+    }
     $latitude = $latitude * (3.14159265359 / 180);
     $longitude = $longitude * (3.14159265359 / 180);
     $coslat0 = 1;
@@ -423,12 +484,26 @@ function calcularLambertAzimuthalEqualAreaY(float $latitude, float $longitude): 
     return ($k * ($coslat0 * $sinlat - $sinlat0 * $coslat * $coslon));
 }
 
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 41
+ * PEARSON, F. Map Projections: Theory and Applications. pp 190-191
+ * GOLDBERG, D. M.; GOTT, J. R. Flexion and Skewness in Map Projections of the Earth. p 8
+ * IOGP Coordinate Conversions and Transformations including Formulas. p 45
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 218
+ */
 function calcularMercatorX(float $longitude): float
 {
     $longitude = $longitude * (3.14159265359 / 180);
     return $longitude;
 }
 
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 41
+ * PEARSON, F. Map Projections: Theory and Applications. pp 190-191
+ * GOLDBERG, D. M.; GOTT, J. R. Flexion and Skewness in Map Projections of the Earth. p 8
+ * IOGP Coordinate Conversions and Transformations including Formulas. p 45
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 218
+ */
 function calcularMercatorY(float $latitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -443,23 +518,31 @@ function calcularMercatorY(float $latitude): float
     }
 }
 
+/*
+ * WEISSTEIN, E. W. Miller Cylindrical Projection
+ */
 function calcularMillerX(float $longitude): float
 {
     $longitude = $longitude * (3.14159265359 / 180);
     return $longitude;
 }
 
+/*
+ * WEISSTEIN, E. W. Miller Cylindrical Projection
+ */
 function calcularMillerY(float $latitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
     return ((5/4) * log(tan(3.14159265359/4 + ((2 * $latitude)/5))));
 }
 
+/*
+ * WEISSTEIN, E. W. Mollweide Projection.
+ * SNYDER, J. P. Map Projections - A Working Manual. p 251
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 220
+ */
 function calcularMollweideTheta(float $latitude): float
 {
-    //$latitude = $latitude * (3.14159265359 / 180);
-    //$theta = $latitude - (2 * asin(2 * $latitude / 3.14159265359));
-    //$k = 3.14159265359 * sin($latitude);
     $theta = $latitude * (3.14159265359 / 180);
     $k = 3.14159265359 * sin($theta);
     for ($i = 10; $i > 0; $i--) {
@@ -477,23 +560,32 @@ function calcularMollweideTheta(float $latitude): float
     return $theta;
 }
 
+/*
+ * WEISSTEIN, E. W. Mollweide Projection.
+ * SNYDER, J. P. Map Projections - A Working Manual. p 251
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 220
+ */
 function calcularMollweideX(float $theta, float $longitude): float
 {
     $longitude = $longitude * (3.14159265359 / 180);
-    $sp = sin(3.14159265359 / 2);
-    $r = sqrt(3.14159265359 * 2 * $sp / (3.14159265359 + sin(3.14159265359)));
-    $cx = 2 * $r / 3.14159265359;
+    $cx = 2 * sqrt(2) / 3.14159265359;
     return ($cx * $longitude * cos($theta));
 }
 
+/*
+ * WEISSTEIN, E. W. Mollweide Projection.
+ * SNYDER, J. P. Map Projections - A Working Manual. p 251
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 220
+ */
 function calcularMollweideY(float $theta): float
 {
-    $sp = sin(3.14159265359 / 2);
-    $r = sqrt(3.14159265359 * 2 * $sp / (3.14159265359 + sin(3.14159265359)));
-    $cy = $r / $sp;
+    $cy = sqrt(2);
     return ($cy * sin($theta));
 }
 
+/*
+ * ŠAVRIČ, B.; JENNY, B.; PATTERSON, T.; PETROVIČ, D.; HURNI, L. A Polynomial Equation for the Natural Earth Projection. p 366
+ */
 function calcularNaturalEarthX(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -501,12 +593,18 @@ function calcularNaturalEarthX(float $latitude, float $longitude): float
     return ($longitude * (0.870700 - 0.131979 * pow($latitude, 2) - 0.013791 * pow($latitude, 4) + 0.003971 * pow($latitude, 10) - 0.001529 * pow($latitude, 12)));
 }
 
+/*
+ * ŠAVRIČ, B.; JENNY, B.; PATTERSON, T.; PETROVIČ, D.; HURNI, L. A Polynomial Equation for the Natural Earth Projection. p 366
+ */
 function calcularNaturalEarthY(float $latitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
     return (1.007226 * $latitude + 0.015085 * pow($latitude, 3) - 0.044475 * pow($latitude, 7) + 0.028874 * pow($latitude, 9) - 0.005916 * pow($latitude, 11));
 }
 
+/*
+ * ŠAVRIČ, B.; PATTERSON, T.; JENNY, B. The Natural Earth II world map projection. p 125
+ */
 function calcularNaturalEarthIIX(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -518,6 +616,9 @@ function calcularNaturalEarthIIX(float $latitude, float $longitude): float
     return ($longitude * (0.84719 - 0.13063 * $latitude2 + $latitude6 * $latitude6 * (-0.04515 + 0.05494 * $latitude2 - 0.02326 * $latitude4 + 0.00331 * $latitude6)));
 }
 
+/*
+ * ŠAVRIČ, B.; PATTERSON, T.; JENNY, B. The Natural Earth II world map projection. p 125
+ */
 function calcularNaturalEarthIIY(float $latitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -527,12 +628,18 @@ function calcularNaturalEarthIIY(float $latitude): float
     return ($latitude * (1.01183 + $latitude4 * $latitude4 * (0.01926 * $latitude2 - 0.00396 * $latitude4 - 0.02625)));
 }
 
+/*
+ *  PATTERSON, T.; ŠAVRIČ, B.; JENNY, B. Introducing the Patterson Cylindrical Projection. p 80
+ */
 function calcularPattersonX(float $longitude): float
 {
     $longitude = $longitude * (3.14159265359 / 180);
     return $longitude;
 }
 
+/*
+ *  PATTERSON, T.; ŠAVRIČ, B.; JENNY, B. Introducing the Patterson Cylindrical Projection. p 80
+ */
 function calcularPattersonY(float $latitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -541,6 +648,9 @@ function calcularPattersonY(float $latitude): float
     return ($latitude * (1.0148 + $latitude2 * $latitude2 * (0.23185 + $latitude2 * (-0.14499 + $latitude2 * 0.02406))));
 }
 
+/*
+ *  IPBUKER, C. A computational approach to the Robinson projection. p 207
+ */
 function calcularRobinsonX(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -548,6 +658,9 @@ function calcularRobinsonX(float $latitude, float $longitude): float
     return ((2.6666 - 0.367 * pow($latitude, 2) - 0.150 * pow($latitude, 4) + 0.0379 * pow($latitude, 6)) * $longitude / 3.14159265359);
 }
 
+/*
+ *  IPBUKER, C. A computational approach to the Robinson projection. p 207
+ */
 function calcularRobinsonY(float $latitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -555,17 +668,28 @@ function calcularRobinsonY(float $latitude): float
     return (0.96047 * $latitude - 0.00857 * $s * pow(abs($latitude), 6.41));
 }
 
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 247
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 220
+ */
 function calcularSinusoidalX(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
     return $longitude * cos($latitude);
 }
 
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 247
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 220
+ */
 function calcularSinusoidalY(float $latitude): float
 {
     return $latitude;
 }
 
+/*
+ * SNYDER, J. P. Flattening the Earth: Two thousand years of map projections. p 205
+ */
 function calcularWagnerVIX(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -573,12 +697,18 @@ function calcularWagnerVIX(float $latitude, float $longitude): float
     return ($longitude * sqrt(1 - 3 * pow($latitude / 3.14159265359, 2)));
 }
 
+/*
+ * SNYDER, J. P. Flattening the Earth: Two thousand years of map projections. p 205
+ */
 function calcularWagnerVIY(float $latitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
     return $latitude;
 }
 
+/*
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 233
+ */
 function calcularWinkelIIIX(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -588,6 +718,9 @@ function calcularWinkelIIIX(float $latitude, float $longitude): float
     return ((1 / 2) * ($longitude * cos(acos(2 / 3.14159265359)) + ((2 * cos($latitude) * sin($longitude / 2)) / ($sinc))));
 }
 
+/*
+ * SNYDER, J. P.; VOXLAND, P. M. An Album of Map Projections. p 233
+ */
 function calcularWinkelIIIY(float $latitude, float $longitude): float
 {
     $latitude = $latitude * (3.14159265359 / 180);
@@ -606,7 +739,7 @@ function coordenarCentro(int $largura, int $altura): array
 
 function exibirMundo(int $largura, int $altura, string $projecao): string
 {
-    $svg = '<g fill="rgb(200,200,200)" fill-rule="nonzero" stroke="rgb(150,150,150)" stroke-width="1">' . PHP_EOL;
+    $svg = '<g fill="rgb(200,200,200)" fill-rule="nonzero" stroke="rgb(152,152,152)" stroke-width="1">' . PHP_EOL;
     
     $array = carregarMundo();
     $paises = $array['features'];
@@ -699,7 +832,7 @@ function exibirFundoAzul(int $largura, int $altura, string $projecao): string
 
 function exibirGrade(int $largura, int $altura, string $projecao): string
 {
-    $svg = '<g fill="none" stroke="lightgray" stroke-width="1">' . PHP_EOL;
+    $svg = '<g fill="none" stroke="rgb(240,240,240)" stroke-width="1">' . PHP_EOL;
     
     $svg .= exibirParalelos($largura, $altura, $projecao);
     $svg .= exibirMeridianos($largura, $altura, $projecao);
@@ -816,8 +949,14 @@ function montarLinhaCirculo(float $latitude, int $largura, int $altura, string $
 
 function exibirEquador(int $largura, int $altura, string $projecao): string
 {
-    $ocidente = converterGeoPixel(0, -180, $largura, $altura, $projecao);
-    $oriente = converterGeoPixel(0, 180, $largura, $altura, $projecao);
+    $w = -180;
+    $e = 180;
+    if ($projecao == 'l') {
+        $w++;
+        $e--;
+    }
+    $ocidente = converterGeoPixel(0, $w, $largura, $altura, $projecao);
+    $oriente = converterGeoPixel(0, $e, $largura, $altura, $projecao);
     return '<line x1="' . $ocidente['x'] . '" y1="' . $ocidente['y'] . '" x2="' . $oriente['x'] . '" y2="' . $oriente['y'] . '" />' . PHP_EOL;
 }
 
