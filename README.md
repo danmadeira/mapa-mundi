@@ -50,6 +50,8 @@ Tudo na imagem é construído de acordo com a projeção escolhida e proporciona
 
 ### Referências
 
+- BUGAYEVSKIY, L. M.; SNYDER, J. P. *Map Projections A Reference Manual*. Taylor & Francis Ltd, 1995.
+
 - BUTLER, H. et al. *The GeoJSON Format*. IETF RFC 7946. August 2016. Disponível em: <https://tools.ietf.org/html/rfc7946>
 
 - CHANG, K. *Introduction to Geographic Information Systems, Ninth Edition*. McGraw-Hill Education, 2018.
@@ -73,6 +75,8 @@ Tudo na imagem é construído de acordo com a projeção escolhida e proporciona
 - IOGP *Coordinate Conversions and Transformations including Formulas*. IOGP Publication 373-7-2, Geomatics Guidance Note number 7, part 2, October 2020. Disponível em: <https://epsg.org/guidance-notes.html>
 
 - IPBUKER, C. *A computational approach to the Robinson projection*. Survey Review. Volume 38, Issue 297, pp. 204-217, July 2005.
+
+- JENNY, B. *Adaptive Composite Map Projections*. IEEE Transactions on Visualization and Computer Graphics, Volume 18, Issue 12, p. 2575–2582, December 2012.
 
 - JENNY, B. *Java Map Projection Library*. Cartography and Geovisualization Group, Oregon State University. June 12, 2019. Disponível em: <https://github.com/OSUCartography/JMapProjLib>
 
