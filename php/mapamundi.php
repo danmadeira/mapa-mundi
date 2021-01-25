@@ -22,14 +22,12 @@ function montarPagina(int $largura, int $altura, string $projecao): string
     $html .= $svg;
     //$html .= '<p>Tempo de processamento: ' . round($fim - $inicio, 3) . ' segundos.</p>' . PHP_EOL;
     $html .= '</body>' . PHP_EOL . '</html>';
-    
     return $html;
 }
 
 function exibirCidades(int $largura, int $altura, string $projecao): string
 {
     $svg = '';
-    
     $dsn = 'mysql:host=localhost;dbname=world;charset=utf8';
     $user = 'usuario';
     $pass = 'senha';
@@ -53,7 +51,6 @@ function exibirCidades(int $largura, int $altura, string $projecao): string
         }
         $svg .= '</g>' . PHP_EOL;
     }
-    
     return $svg;
 }
 
@@ -62,7 +59,6 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
     $centro = coordenarCentro($largura, $altura);
     
     switch ($projecao) {
-
         case 'e': // Eckert IV projection
             if ($largura / $altura < 2.002) {
                 $modulo = $largura / (calcularEckertIVX(0, 180) * 2);
@@ -248,7 +244,6 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $x = floor($centro['x'] + ($longitude * $modulo));
             $y = floor($centro['y'] - ($latitude * $modulo));
     }
-    
     return array('x' => $x, 'y' => $y);
 }
 
@@ -270,7 +265,6 @@ function calcularEckertIVTheta(float $latitude): float
             break;
         }
     }
-    
     return $theta;
 }
 
@@ -629,7 +623,7 @@ function calcularNaturalEarthIIY(float $latitude): float
 }
 
 /*
- *  PATTERSON, T.; ŠAVRIČ, B.; JENNY, B. Introducing the Patterson Cylindrical Projection. p 80
+ * PATTERSON, T.; ŠAVRIČ, B.; JENNY, B. Introducing the Patterson Cylindrical Projection. p 80
  */
 function calcularPattersonX(float $longitude): float
 {
@@ -638,7 +632,7 @@ function calcularPattersonX(float $longitude): float
 }
 
 /*
- *  PATTERSON, T.; ŠAVRIČ, B.; JENNY, B. Introducing the Patterson Cylindrical Projection. p 80
+ * PATTERSON, T.; ŠAVRIČ, B.; JENNY, B. Introducing the Patterson Cylindrical Projection. p 80
  */
 function calcularPattersonY(float $latitude): float
 {
@@ -649,7 +643,7 @@ function calcularPattersonY(float $latitude): float
 }
 
 /*
- *  IPBUKER, C. A computational approach to the Robinson projection. p 207
+ * IPBUKER, C. A computational approach to the Robinson projection. p 207
  */
 function calcularRobinsonX(float $latitude, float $longitude): float
 {
@@ -659,7 +653,7 @@ function calcularRobinsonX(float $latitude, float $longitude): float
 }
 
 /*
- *  IPBUKER, C. A computational approach to the Robinson projection. p 207
+ * IPBUKER, C. A computational approach to the Robinson projection. p 207
  */
 function calcularRobinsonY(float $latitude): float
 {
@@ -923,7 +917,6 @@ function exibirCirculos(int $largura, int $altura, string $projecao): string
         $svg .= montarLinhaCirculo($artico, $largura, $altura, $projecao);
         $svg .= montarLinhaCirculo($antartico, $largura, $altura, $projecao);
     }
-    
     return $svg;
 }
 
