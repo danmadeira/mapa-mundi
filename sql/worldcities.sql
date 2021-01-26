@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Tempo de geração: 08-Jan-2021 às 12:44
+-- Tempo de geração: 26-Jan-2021 às 22:39
 -- Versão do servidor: 10.4.17-MariaDB
--- versão do PHP: 7.4.13
+-- versão do PHP: 7.4.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -765,7 +765,7 @@ INSERT INTO `worldcities` (`city`, `city_ascii`, `lat`, `lng`, `country`, `iso2`
 ('Kota', 'Kota', 25.18, 75.83, 'India', 'IN', 'IND', 'Rājasthān', NULL, 1001690, '1356820310'),
 ('Abu Dhabi', 'Abu Dhabi', 24.4781, 54.3686, 'United Arab Emirates', 'AE', 'ARE', 'Abū Z̧aby', 'primary', 1000000, '1784176710'),
 ('Stockholm', 'Stockholm', 59.3294, 18.0686, 'Sweden', 'SE', 'SWE', 'Stockholm', 'primary', 972647, '1752425602'),
-('Ottawa', 'Ottawa', 45.4247, -75.695, 'Canada', 'CA', 'CAN', 'Ontario', NULL, 989567, '1124399363'),
+('Ottawa', 'Ottawa', 45.4247, -75.695, 'Canada', 'CA', 'CAN', 'Ontario', 'primary', 989567, '1124399363'),
 ('Asmara', 'Asmara', 15.3333, 38.9167, 'Eritrea', 'ER', 'ERI', 'Ma’ākel', 'primary', 963000, '1232791236'),
 ('Freetown', 'Freetown', 8.4833, -13.2331, 'Sierra Leone', 'SL', 'SLE', 'Western Area', 'primary', 951000, '1694085071'),
 ('Jerusalem', 'Jerusalem', 31.7833, 35.2167, 'Israel', 'IL', 'ISR', 'Southern', 'primary', 919438, '1376261644'),
