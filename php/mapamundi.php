@@ -111,6 +111,16 @@ function converterGeoPixel(float $latitude, float $longitude, int $largura, int 
             $y = floor($centro['y'] - (calcularHammerY($latitude, $longitude) * $modulo));
             break;
             
+        case 'i': // Equal Earth projection
+            if ($largura / $altura < 2.05) {
+                $modulo = $largura / (calcularEqualEarthX(converterGeograficaParaAutalica(0), 180) * 2);
+            } else {
+                $modulo = $altura / (calcularEqualEarthY(converterGeograficaParaAutalica(90), 0) * 2);
+            }
+            $x = floor($centro['x'] + (calcularEqualEarthX(converterGeograficaParaAutalica($latitude), $longitude) * $modulo));
+            $y = floor($centro['y'] - (calcularEqualEarthY(converterGeograficaParaAutalica($latitude), $longitude) * $modulo));
+            break;
+
         case 'k': // Kavrayskiy VII projection
             if ($largura / $altura < 1.733) {
                 $modulo = $largura / (calcularKavrayskiyVIIX(0, 180) * 2);
@@ -322,6 +332,27 @@ function calcularEckertVIX(float $theta, float $longitude): float
 function calcularEckertVIY(float $theta): float
 {
     return (2 * $theta / sqrt(2 + 3.14159265359));
+}
+
+/*
+ * ŠAVRIČ, B.; PATTERSON, T.; JENNY, B. The Equal Earth map projection. p 456
+ */
+function calcularEqualEarthX(float $latitude, float $longitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    $longitude = $longitude * (3.14159265359 / 180);
+    $theta := asin((sqrt(3) / 2) * sin($latitude));
+    return ((2 * sqrt(3) * $longitude * cos($theta)) / (3 * (1.340264 + 3 * (-0.081106) * pow($theta, 2) + pow($theta, 6) * (7 * 0.000893 + 9 * 0.003796 * pow($theta, 2)))));
+}
+
+/*
+ * ŠAVRIČ, B.; PATTERSON, T.; JENNY, B. The Equal Earth map projection. p 456
+ */
+function calcularEqualEarthY(float $latitude): float
+{
+    $latitude = $latitude * (3.14159265359 / 180);
+    $theta := asin((sqrt(3) / 2) * sin($latitude));
+    return ($theta * (1.340264 - 0.081106 * pow($theta, 2) + pow($theta, 6) * (0.000893 + 0.003796 * pow($theta, 2))));
 }
 
 /*
@@ -722,6 +753,23 @@ function calcularWinkelIIIY(float $latitude, float $longitude): float
     $alpha = acos(cos($latitude) * cos($longitude / 2));
     $sinc = sin($alpha) / $alpha;
     return ((1 / 2) * ($latitude + (sin($latitude) / ($sinc))));
+}
+
+/*
+ * SNYDER, J. P. Map Projections - A Working Manual. p 16
+ */
+function converterGeograficaParaAutalica(float $latitude): float
+{
+    if (abs($latitude) >= 90) {
+        return $latitude;
+    }
+    $phi := $latitude * 3.14159265359 / 180;
+    $e   := 0.0818191908426;
+    $e2  := 0.00669437999014;
+    $q := (1 - $e2) * ((sin($phi) / (1 - $e2 * power(sin($phi), 2))) - (1 / (2 * $e)) * log((1 - $e * sin($phi)) / (1 + $e * sin($phi))));
+    $qp := (1 - $e2) * ((1 / (1 - $e2)) - (1 / (2 * $e)) * log((1 - $e) / (1 + $e)));
+    $latitudeautalica := asin($q / $qp);
+    return ($latitudeautalica * 180 / 3.14159265359);
 }
 
 function coordenarCentro(int $largura, int $altura): array

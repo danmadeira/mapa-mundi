@@ -12,6 +12,7 @@ Ex.: mapamundi.php?largura=1000&altura=500&projecao=N
 
 - Eckert IV;
 - Eckert VI;
+- Equal Earth;
 - Equidistante;
 - Gott equal-area elliptical;
 - Hammer;
@@ -101,6 +102,8 @@ Tudo na imagem é construído de acordo com a projeção escolhida e proporciona
 - PROJ contributors *PROJ coordinate transformation software library*, Release 7.2.1. Open Source Geospatial Foundation, January 1st 2021. Disponível em: <https://proj.org/>
 
 - ŠAVRIČ, B.; JENNY, B.; PATTERSON, T.; PETROVIČ, D.; HURNI, L. *A Polynomial Equation for the Natural Earth Projection*. Cartography and Geographic Information Science, Vol. 38, No. 4, pp. 363-372, 2011.
+
+- ŠAVRIČ, B.; PATTERSON, T.; JENNY, B. *The Equal Earth map projection*. International Journal of Geographical Information Science, Volume 33, Issue 3, pp. 454-465, 2019.
 
 - ŠAVRIČ, B.; PATTERSON, T.; JENNY, B. *The Natural Earth II world map projection*. International Journal of Cartography, 
 Volume 1, Issue 2, pp. 123–133, 2015.
